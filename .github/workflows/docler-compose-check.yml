@@ -1,0 +1,25 @@
+name: Docker Compose Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compose-check:
+    name: Check Docker Compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create environment file
+        run: cp .env.example .env
+
+      - name: Build and start services
+        run: docker compose up --build -d
+
+      - name: Show running containers
+        run: docker compose ps
+
+      - name: Stop services
+        run: docker compose down
