@@ -1,0 +1,22 @@
+# Entorno virtual
+.venv/
+
+# Variables de entorno
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos generados por Django
+staticfiles/
+
+# Sistema / editor
+.vscode/
+.DS_Store
+
+# Git / Docker temporales
+*.log
+

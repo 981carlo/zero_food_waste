@@ -1,0 +1,21 @@
+# Entorno virtual de Python
+# No se copia porque Docker instala las dependencias desde requirements.txt
+.venv/
+
+# Variables de entorno
+.env
+
+# Carpeta interna de Git
+.git/
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos estáticos generados por Django
+staticfiles/
+
+# Archivos de logs
+*.log

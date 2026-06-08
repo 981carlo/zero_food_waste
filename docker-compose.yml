@@ -1,0 +1,36 @@
+services:
+  web:
+    build: .
+    container_name: zero_food_waste_web
+    command: sh -c "python manage.py collectstatic --noinput && uvicorn config.asgi:application --host 0.0.0.0 --port 8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:8.0
+    container_name: zero_food_waste_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: zero_food_waste_nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - web
+    volumes:
+      - static_volume:/app/staticfiles
+
+volumes:
+  mongo_data:
+  static_volume:
