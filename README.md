@@ -139,7 +139,7 @@ docker compose up --build
 
 El proyecto incluye configuración de GitHub Actions para automatizar comprobaciones relacionadas con Docker.
 
-### Docker Build
+### Docker Build and Push to GHCR
 
 Archivo:
 
@@ -147,11 +147,7 @@ Archivo:
 .github/workflows/github-action-docker-build.yml
 ```
 
-Este workflow se ejecuta únicamente cuando se sube un tag al repositorio. Su función es comprobar que la imagen principal del proyecto puede construirse correctamente con:
-
-```bash
-docker build .
-```
+Este workflow se ejecuta cuando se sube un tag al repositorio. Su función es construir la imagen principal del proyecto usando el `Dockerfile` y publicarla en GitHub Container Registry.
 
 Para lanzar este workflow, se puede crear y subir un tag:
 
@@ -160,7 +156,14 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Este workflow valida que el `Dockerfile` construye correctamente la imagen del proyecto.
+La imagen publicada sigue este formato:
+
+```text
+ghcr.io/981carlo/zero_food_waste:latest
+ghcr.io/981carlo/zero_food_waste:v1.0.0
+```
+
+Este workflow valida que el `Dockerfile` construye correctamente la imagen del proyecto y, además, deja la imagen disponible en el registro de contenedores.
 
 ### Docker Compose Check
 

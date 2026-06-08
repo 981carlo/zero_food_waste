@@ -5,7 +5,7 @@ on:
     tags:
       - "*" # Triggers with every tag
 
-# Set permissions so the workflow cann upload images tags
+# Set permissions so the workflow can upload images tags
 permissions:
   contents: read
   packages: write
