@@ -144,7 +144,7 @@ El proyecto incluye configuración de GitHub Actions para automatizar comprobaci
 Archivo:
 
 ```text
-.github/workflows/docker-build.yml
+.github/workflows/github-action-docker-build.yml
 ```
 
 Este workflow se ejecuta únicamente cuando se sube un tag al repositorio. Su función es comprobar que la imagen principal del proyecto puede construirse correctamente con:
@@ -167,7 +167,7 @@ Este workflow valida que el `Dockerfile` construye correctamente la imagen del p
 Archivo:
 
 ```text
-.github/workflows/docker-compose-check.yml
+.github/workflows/github-action-docker-compose-check.yml
 ```
 
 Este workflow es manual y se puede ejecutar desde la pestaña **Actions** de GitHub. Su función es comprobar el despliegue completo del proyecto usando Docker Compose:
