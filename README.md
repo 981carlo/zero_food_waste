@@ -134,3 +134,52 @@ Este modo comprueba que la imagen creada con el Dockerfile puede ejecutarse con 
 ```bash
 docker compose up --build
 ```
+
+## 10. GitHub Actions
+
+El proyecto incluye configuración de GitHub Actions para automatizar comprobaciones relacionadas con Docker.
+
+### Docker Build
+
+Archivo:
+
+```text
+.github/workflows/docker-build.yml
+```
+
+Este workflow se ejecuta únicamente cuando se sube un tag al repositorio. Su función es comprobar que la imagen principal del proyecto puede construirse correctamente con:
+
+```bash
+docker build .
+```
+
+Para lanzar este workflow, se puede crear y subir un tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Este workflow valida que el `Dockerfile` construye correctamente la imagen del proyecto.
+
+### Docker Compose Check
+
+Archivo:
+
+```text
+.github/workflows/docker-compose-check.yml
+```
+
+Este workflow es manual y se puede ejecutar desde la pestaña **Actions** de GitHub. Su función es comprobar el despliegue completo del proyecto usando Docker Compose:
+
+```bash
+docker compose up --build -d
+```
+
+Con esta comprobación se validan los tres servicios principales del proyecto:
+
+* `mongo`: base de datos MongoDB.
+* `web`: aplicación Django ejecutada con Uvicorn.
+* `nginx`: servidor Nginx que actúa como proxy inverso.
+
+El workflow de Docker Compose solo se ejecuta cuando se lanza manualmente desde GitHub.
