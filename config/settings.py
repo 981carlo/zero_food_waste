@@ -24,10 +24,10 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@f1*4@rpqs@++#w@z&citks&5f*bpa8cc(+sa9dux6c1kghpw&'
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-dev-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "web", "nginx", "34.175.134.86", "www.zerofoodwaste.dev"]
 
