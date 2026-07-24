@@ -6,7 +6,7 @@ from . import views
 app_name = "usuarios"
 
 urlpatterns = [
-    path("registro/", views.registrar_usuario, name="registro"),
-    path("iniciar-sesion/", views.iniciar_sesion, name="iniciar_sesion"),
-    path("cerrar-sesion/", views.cerrar_sesion, name="cerrar_sesion"),
+    path("registro/", views.RegistroUsuarioAPIView.as_view(), name="registro"),
+    path("iniciar-sesion/", views.InicioSesionAPIView.as_view(), name="iniciar_sesion"),
+    path("cerrar-sesion/", views.CerrarSesionAPIView.as_view(), name="cerrar_sesion"),
 ]
