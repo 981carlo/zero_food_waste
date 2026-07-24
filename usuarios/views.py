@@ -1,18 +1,29 @@
-from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
+from django.contrib.auth import login, logout
 
-from .forms import RegistroUsuarioForm
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import (
+    InicioSesionSerializer,
+    RegistroUsuarioSerializer,
+)
 
 
-@require_POST
-def registrar_usuario(request):
-    formulario = RegistroUsuarioForm(request.POST)
+class RegistroUsuarioAPIView(APIView):
+    permission_classes = [AllowAny]
 
-    if formulario.is_valid():
-        usuario = formulario.save()
+    def post(self, request):
+        serializer = RegistroUsuarioSerializer(
+            data=request.data
+        )
 
-        return JsonResponse(
+        serializer.is_valid(raise_exception=True)
+
+        usuario = serializer.save()
+
+        return Response(
             {
                 "mensaje": "Usuario registrado correctamente.",
                 "usuario": {
@@ -20,60 +31,45 @@ def registrar_usuario(request):
                     "email": usuario.email,
                 },
             },
-            status=201,
+            status=status.HTTP_201_CREATED,
         )
-
-    return JsonResponse(
-        {"errores": formulario.errors.get_json_data()},
-        status=400,
-    )
     
-@require_POST
-def iniciar_sesion(request):
-    username = request.POST.get("username", "").strip()
-    password = request.POST.get("password", "")
+class InicioSesionAPIView(APIView):
+    permission_classes = [AllowAny]
 
-    if not username or not password:
-        return JsonResponse(
+    def post(self, request):
+        serializer = InicioSesionSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        usuario = serializer.validated_data["usuario"]
+
+        login(request, usuario)
+
+        return Response(
             {
-                "error": (
-                    "El nombre de usuario y la contraseña son obligatorios."
-                )
+                "mensaje": "Sesión iniciada correctamente.",
+                "usuario": {
+                    "username": usuario.username,
+                    "email": usuario.email,
+                },
             },
-            status=400,
+            status=status.HTTP_200_OK,
         )
 
-    usuario = authenticate(
-        request,
-        username=username,
-        password=password,
-    )
 
-    if usuario is None:
-        return JsonResponse(
-            {"error": "Credenciales incorrectas."},
-            status=401,
-        )
+class CerrarSesionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    login(request, usuario)
+    def post(self, request):
+        logout(request)
 
-    return JsonResponse(
-        {
-            "mensaje": "Sesión iniciada correctamente.",
-            "usuario": {
-                "username": usuario.username,
-                "email": usuario.email,
+        return Response(
+            {
+                "mensaje": "Sesión cerrada correctamente.",
             },
-        },
-        status=200,
-    )
-
-
-@require_POST
-def cerrar_sesion(request):
-    logout(request)
-
-    return JsonResponse(
-        {"mensaje": "Sesión cerrada correctamente."},
-        status=200,
-    )
+            status=status.HTTP_200_OK,
+        )

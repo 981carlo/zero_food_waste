@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_mongodb_backend',
+    'rest_framework',
     'despensa',
     'usuarios',
 ]
