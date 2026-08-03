@@ -102,3 +102,10 @@ def login_web(request):
         form = AuthenticationForm()
 
     return render(request, "usuarios/login.html", {"form": form})
+
+def logout_web(request):
+    if request.method == "POST":
+        logout(request)
+        return redirect("inicio")
+
+    return render(request, "usuarios/logout.html")
