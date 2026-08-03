@@ -13,6 +13,13 @@
       alimentario.
     </p>
 
+    {% if user.is_authenticated %}
+    <p>Usuario: <strong>{{ user.username }}</strong></p>
+
+    <p>
+      <a href="{% url 'usuarios:logout_web' %}">Cerrar sesión</a>
+    </p>
+    {% else %}
     <p>
       <a href="{% url 'usuarios:registro_web' %}">Crear cuenta</a>
     </p>
@@ -20,6 +27,7 @@
     <p>
       <a href="{% url 'usuarios:login_web' %}">Iniciar sesión</a>
     </p>
+    {% endif %}
 
     <h2>Funcionalidades principales</h2>
 
