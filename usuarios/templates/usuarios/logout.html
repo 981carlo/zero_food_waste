@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cerrar sesión - Zero Food Waste</title>
+  </head>
+  <body>
+    <h1>Cerrar sesión</h1>
+
+    <p>Estás a punto de cerrar sesión</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit">Cerrar sesión</button>
+    </form>
+
+    <p>
+      <a href="{% url 'inicio' %}">Cancelar y volver al inicio</a>
+    </p>
+  </body>
+</html>
