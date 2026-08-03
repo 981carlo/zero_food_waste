@@ -1,4 +1,7 @@
 from django.contrib.auth import login, logout
+from django.shortcuts import redirect, render
+
+from .forms import RegistroUsuarioForm
 
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -73,3 +76,15 @@ class CerrarSesionAPIView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+        
+def registro_web(request):
+    if request.method == "POST":
+        form = RegistroUsuarioForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            return redirect("inicio")
+    else:
+        form = RegistroUsuarioForm()
+
+    return render(request, "usuarios/registro.html", {"form": form})
