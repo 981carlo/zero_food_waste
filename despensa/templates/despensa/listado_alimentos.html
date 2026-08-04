@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}
+Listado de alimentos - Zero Food Waste
+{% endblock %}
+
+{% block content %}
+<h2>Mis alimentos</h2>
+
+{% if alimentos %}
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Cantidad</th>
+      <th>Unidad</th>
+      <th>Fecha de caducidad</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for alimento in alimentos %}
+    <tr>
+      <td>{{ alimento.nombre }}</td>
+      <td>{{ alimento.cantidad }}</td>
+      <td>{{ alimento.unidad_medida }}</td>
+      <td>{{ alimento.fecha_caducidad }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No tienes alimentos registrados.</p>
+{% endif %}
+
+<p>
+  <a href="{% url 'inicio' %}">Volver al inicio</a>
+</p>
+{% endblock %}

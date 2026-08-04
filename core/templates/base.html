@@ -15,6 +15,7 @@
 
         {% if user.is_authenticated %}
           <span>Usuario: <strong>{{ user.username }}</strong></span>
+          <a href="{% url 'despensa:listado_alimentos' %}">Mis alimentos</a>
           <a href="{% url 'usuarios:logout_web' %}">Cerrar sesión</a>
         {% else %}
           <a href="{% url 'usuarios:registro_web' %}">Crear cuenta</a>

@@ -1,6 +1,9 @@
 from datetime import timedelta
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 from django.utils import timezone
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -36,3 +39,16 @@ class AlimentoViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(alimentos, many=True)
         return Response(serializer.data)
+
+
+@login_required(login_url="usuarios:login_web")
+def listado_alimentos_web(request):
+    alimentos = Alimento.objects.filter(
+        usuario=request.user
+    ).order_by("fecha_caducidad")
+
+    return render(
+        request,
+        "despensa/listado_alimentos.html",
+        {"alimentos": alimentos}
+    )
