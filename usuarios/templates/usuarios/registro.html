@@ -1,20 +1,21 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Registro - Zero Food Waste</title>
-  </head>
-  <body>
-    <h1>Crear cuenta</h1>
+{% extends "base.html" %}
 
-    <form method="post">
-      {% csrf_token %} {{ form.as_p }}
+{% block title %}
+Registro - Zero Food Waste
+{% endblock %}
 
-      <button type="submit">Registrarse</button>
-    </form>
+{% block content %}
+<h2>Crear Cuenta</h2>
 
-    <p>
-      <a href="{% url 'inicio' %}">Volver al inicio</a>
-    </p>
-  </body>
-</html>
+<form method="post">
+  {% csrf_token %}
+
+  {{ form.as_p }}
+
+  <button type="submit">Registrarse</button>
+</form>
+
+<p>
+  <a href="{% url 'inicio' %}">Volver al inicio</a>
+</p>
+{% endblock %}

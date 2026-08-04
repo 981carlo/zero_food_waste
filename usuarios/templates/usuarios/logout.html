@@ -1,21 +1,21 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Cerrar sesión - Zero Food Waste</title>
-  </head>
-  <body>
-    <h1>Cerrar sesión</h1>
+{% extends "base.html" %}
 
-    <p>Estás a punto de cerrar sesión</p>
+{% block title %}
+Cerrar sesión - Zero Food Waste
+{% endblock %}
 
-    <form method="post">
-      {% csrf_token %}
-      <button type="submit">Cerrar sesión</button>
-    </form>
+{% block content %}
+<h2>Cerrar sesión</h2>
 
-    <p>
-      <a href="{% url 'inicio' %}">Cancelar y volver al inicio</a>
-    </p>
-  </body>
-</html>
+<p>Estás a punto de cerrar sesión.</p>
+
+<form method="post">
+  {% csrf_token %}
+
+  <button type="submit">Cerrar sesión</button>
+</form>
+
+<p>
+  <a href="{% url 'inicio' %}">Cancelar y volver al inicio</a>
+</p>
+{% endblock %}

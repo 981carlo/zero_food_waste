@@ -1,44 +1,27 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Zero Food Waste</title>
-  </head>
-  <body>
-    <h1>Zero Food Waste</h1>
+{% extends "base.html" %}
 
-    <p>
-      Registra alimentos disponibles en el hogar, controla sus fechas de
-      caducidad y genera recetas personalizadas para reducir el desperdicio
-      alimentario.
-    </p>
+{% block title %}Inicio - Zero Food Waste{% endblock %}
 
-    {% if user.is_authenticated %}
-    <p>Usuario: <strong>{{ user.username }}</strong></p>
+{% block content %}
+  <h2>Inicio</h2>
 
-    <p>
-      <a href="{% url 'usuarios:logout_web' %}">Cerrar sesión</a>
-    </p>
-    {% else %}
-    <p>
-      <a href="{% url 'usuarios:registro_web' %}">Crear cuenta</a>
-    </p>
+  <p>
+    Aplicación web para registrar alimentos disponibles en el hogar,
+    controlar sus fechas de caducidad y generar recetas personalizadas
+    para reducir el desperdicio alimentario.
+  </p>
 
-    <p>
-      <a href="{% url 'usuarios:login_web' %}">Iniciar sesión</a>
-    </p>
-    {% endif %}
+  <h3>Funcionalidades principales</h3>
 
-    <h2>Funcionalidades principales</h2>
+  <ul>
+    <li>Registro e inicio de sesión de usuarios.</li>
+    <li>Gestión de alimentos de la despensa.</li>
+    <li>Control de fechas de caducidad.</li>
+    <li>Consulta de alimentos próximos a caducar.</li>
+    <li>Generación de recetas mediante inteligencia artificial.</li>
+  </ul>
 
-    <ul>
-      <li>Registro e inicio de sesión de usuarios.</li>
-      <li>Gestión de alimentos de la despensa.</li>
-      <li>Control de fechas de caducidad.</li>
-      <li>Consulta de alimentos próximos a caducar.</li>
-      <li>Generación de recetas mediante inteligencia artificial.</li>
-    </ul>
-
-    <p>Vista inicial de la aplicación.</p>
-  </body>
-</html>
+  <p>
+    Esta es la vista inicial de la aplicación.
+  </p>
+{% endblock %}
