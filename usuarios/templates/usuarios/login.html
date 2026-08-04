@@ -1,20 +1,21 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Iniciar sesión - Zero Food Waste</title>
-  </head>
-  <body>
-    <h1>Iniciar sesión</h1>
+{% extends "base.html" %}
 
-    <form method="post">
-      {% csrf_token %} {{ form.as_p }}
+{% block title %}
+Iniciar sesion - Zero Food Waste
+{% endblock %}
 
-      <button type="submit">Iniciar sesión</button>
-    </form>
+{% block content %}
+<h2>Iniciar sesion</h2>
 
-    <p>
-      <a href="{% url 'inicio' %}">Volver al inicio</a>
-    </p>
-  </body>
-</html>
+<form method="post">
+  {% csrf_token %}
+
+  {{ form.as_p }}
+
+  <button type="submit">Iniciar sesion</button>
+</form>
+
+<p>
+  <a href="{% url 'inicio' %}">Volver al inicio</a>
+</p>
+{% endblock %}

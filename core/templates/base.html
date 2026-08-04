@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Zero Food Waste{% endblock %}</title>
+  </head>
+  <body>
+    <header>
+      <h1>
+        <a href="{% url 'inicio' %}">Zero Food Waste</a>
+      </h1>
+
+      <nav>
+        <a href="{% url 'inicio' %}">Inicio</a>
+
+        {% if user.is_authenticated %}
+          <span>Usuario: <strong>{{ user.username }}</strong></span>
+          <a href="{% url 'usuarios:logout_web' %}">Cerrar sesión</a>
+        {% else %}
+          <a href="{% url 'usuarios:registro_web' %}">Crear cuenta</a>
+          <a href="{% url 'usuarios:login_web' %}">Iniciar sesión</a>
+        {% endif %}
+      </nav>
+
+      <hr />
+    </header>
+
+    <main>
+      {% block content %}
+      {% endblock %}
+    </main>
+  </body>
+</html>
