@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+Nuevo alimento - Zero Food Waste
+{% endblock %}
+
+{% block content %}
+<h2>Nuevo alimento</h2>
+
+<form method="post">
+  {% csrf_token %}
+
+  {{ form.as_p }}
+
+  <button type="submit">Guardar alimento</button>
+</form>
+
+<p>
+  <a href="{% url 'despensa:listado_alimentos' %}">Volver al listado</a>
+</p>
+{% endblock %}
