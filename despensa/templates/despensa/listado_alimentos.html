@@ -7,6 +7,10 @@ Listado de alimentos - Zero Food Waste
 {% block content %}
 <h2>Mis alimentos</h2>
 
+<p>
+  <a href="{% url 'despensa:alta_alimento' %}">Añadir alimento</a>
+</p>
+
 {% if alimentos %}
 <table>
   <thead>

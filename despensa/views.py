@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from rest_framework import viewsets
@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from .models import Alimento
 from .serializers import AlimentoSerializer
+from .forms import AlimentoForm
 
 
 class AlimentoViewSet(viewsets.ModelViewSet):
@@ -51,4 +52,25 @@ def listado_alimentos_web(request):
         request,
         "despensa/listado_alimentos.html",
         {"alimentos": alimentos}
+    )
+
+
+@login_required(login_url="usuarios:login_web")
+def alta_alimento_web(request):
+    if request.method == "POST":
+        form = AlimentoForm(request.POST)
+
+        if form.is_valid():
+            alimento = form.save(commit=False)
+            alimento.usuario = request.user
+            alimento.save()
+
+            return redirect("despensa:listado_alimentos")
+    else:
+        form = AlimentoForm()
+
+    return render(
+        request,
+        "despensa/formulario_alimento.html",
+        {"form": form}
     )
