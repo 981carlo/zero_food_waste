@@ -102,3 +102,22 @@ def editar_alimento_web(request, alimento_id):
             "texto_boton": "Guardar cambios",
         }
     )
+    
+
+@login_required(login_url="usuarios:login_web")
+def eliminar_alimento_web(request, alimento_id):
+    alimento = get_object_or_404(
+        Alimento,
+        pk=alimento_id,
+        usuario=request.user
+    )
+
+    if request.method == "POST":
+        alimento.delete()
+        return redirect("despensa:listado_alimentos")
+
+    return render(
+        request,
+        "despensa/eliminar_alimento.html",
+        {"alimento": alimento}
+    )

@@ -31,6 +31,8 @@ Listado de alimentos - Zero Food Waste
       <td>{{ alimento.fecha_caducidad }}</td>
         <td>
           <a href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
+          |
+          <a href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
         </td>
     </tr>
     {% endfor %}
