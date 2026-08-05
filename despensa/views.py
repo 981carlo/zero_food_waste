@@ -121,3 +121,25 @@ def eliminar_alimento_web(request, alimento_id):
         "despensa/eliminar_alimento.html",
         {"alimento": alimento}
     )
+    
+    
+@login_required(login_url="usuarios:login_web")
+def alimentos_proximos_web(request):
+    hoy = timezone.localdate()
+    limite = hoy + timedelta(days=7)
+
+    alimentos = Alimento.objects.filter(
+        usuario=request.user,
+        fecha_caducidad__gte=hoy,
+        fecha_caducidad__lte=limite
+    ).order_by("fecha_caducidad")
+
+    return render(
+        request,
+        "despensa/alimentos_proximos.html",
+        {
+            "alimentos": alimentos,
+            "hoy": hoy,
+            "limite": limite,
+        }
+    )
