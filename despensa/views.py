@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
 
 from rest_framework import viewsets
@@ -73,4 +73,32 @@ def alta_alimento_web(request):
         request,
         "despensa/formulario_alimento.html",
         {"form": form}
+    )
+    
+
+@login_required(login_url="usuarios:login_web")
+def editar_alimento_web(request, alimento_id):
+    alimento = get_object_or_404(
+        Alimento,
+        pk=alimento_id,
+        usuario=request.user
+    )
+
+    if request.method == "POST":
+        form = AlimentoForm(request.POST, instance=alimento)
+
+        if form.is_valid():
+            form.save()
+            return redirect("despensa:listado_alimentos")
+    else:
+        form = AlimentoForm(instance=alimento)
+
+    return render(
+        request,
+        "despensa/formulario_alimento.html",
+        {
+            "form": form,
+            "titulo": "Editar alimento",
+            "texto_boton": "Guardar cambios",
+        }
     )
