@@ -10,4 +10,5 @@ urlpatterns = [
     path("alimentos/nuevo/", views.alta_alimento_web, name="alta_alimento"),
     path("alimentos/<str:alimento_id>/editar/", views.editar_alimento_web, name="editar_alimento"),
     path("alimentos/<str:alimento_id>/eliminar/", views.eliminar_alimento_web, name="eliminar_alimento"),
+    path("alimentos/proximos/", views.alimentos_proximos_web, name="alimentos_proximos"),
 ]

@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 
 {% block title %}
-Listado de alimentos - Zero Food Waste
+Alimentos próximos a caducar - Zero Food Waste
 {% endblock %}
 
 {% block content %}
-<h2>Mis alimentos</h2>
+<h2>Alimentos próximos a caducar</h2>
 
 <p>
-  <a href="{% url 'despensa:alta_alimento' %}">Añadir alimento</a>
+  Mostrando alimentos que caducan entre
+  <strong>{{ hoy }}</strong> y <strong>{{ limite }}</strong>.
 </p>
 
 {% if alimentos %}
@@ -29,24 +30,20 @@ Listado de alimentos - Zero Food Waste
       <td>{{ alimento.cantidad }}</td>
       <td>{{ alimento.unidad_medida }}</td>
       <td>{{ alimento.fecha_caducidad }}</td>
-        <td>
-          <a href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
-          |
-          <a href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
-        </td>
+      <td>
+        <a href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
+        |
+        <a href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 {% else %}
-<p>No tienes alimentos registrados.</p>
+<p>No tienes alimentos próximos a caducar.</p>
 {% endif %}
 
 <p>
-  <a href="{% url 'despensa:alimentos_proximos' %}">Próximos a caducar</a>
-</p>
-
-<p>
-  <a href="{% url 'inicio' %}">Volver al inicio</a>
+  <a href="{% url 'despensa:listado_alimentos' %}">Volver al listado</a>
 </p>
 {% endblock %}
