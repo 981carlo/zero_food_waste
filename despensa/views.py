@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
@@ -65,6 +66,8 @@ def alta_alimento_web(request):
             alimento.usuario = request.user
             alimento.save()
 
+            messages.success(request, "Alimento añadido correctamente.")
+            
             return redirect("despensa:listado_alimentos")
     else:
         form = AlimentoForm()
@@ -89,6 +92,9 @@ def editar_alimento_web(request, alimento_id):
 
         if form.is_valid():
             form.save()
+            
+            messages.success(request, "Alimento actualizado correctamente.")
+            
             return redirect("despensa:listado_alimentos")
     else:
         form = AlimentoForm(instance=alimento)
@@ -114,6 +120,9 @@ def eliminar_alimento_web(request, alimento_id):
 
     if request.method == "POST":
         alimento.delete()
+        
+        messages.success(request, "Alimento eliminado correctamente.")
+        
         return redirect("despensa:listado_alimentos")
 
     return render(
