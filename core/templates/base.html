@@ -1,8 +1,11 @@
+{% load static %}
+
 <!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <title>{% block title %}Zero Food Waste{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'core/css/styles.css' %}">
   </head>
   <body>
     <header>
@@ -29,9 +32,9 @@
 
     <main>
       {% if messages %}
-        <ul>
+        <ul class="messages">
           {% for message in messages %}
-            <li>{{ message }}</li>
+            <li class="message {{ message.tags }}">{{ message }}</li>
           {% endfor %}
         </ul>
       {% endif %}
