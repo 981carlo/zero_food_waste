@@ -5,7 +5,10 @@ from .models import Alimento
 
 class AlimentoSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
-
+    unidad_medida = serializers.ChoiceField(
+        choices=Alimento.UnidadMedida.choices
+    )
+    
     class Meta:
         model = Alimento
         fields = (

@@ -3,6 +3,12 @@ from django.db import models
 
 
 class Alimento(models.Model):
+    class UnidadMedida(models.TextChoices):
+        UNIDADES = "unidades", "Unidades"
+        GRAMOS = "gramos", "Gramos"
+        KILOGRAMOS = "kilogramos", "Kilogramos"
+        MILILITROS = "mililitros", "Mililitros"
+        LITROS = "litros", "Litros"
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -10,7 +16,9 @@ class Alimento(models.Model):
     )
     nombre = models.CharField(max_length=100)
     cantidad = models.DecimalField(max_digits=8, decimal_places=2)
-    unidad_medida = models.CharField(max_length=20)
+    unidad_medida = models.CharField(
+        max_length=20,
+        choices=UnidadMedida.choices)
     fecha_caducidad = models.DateField()
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
