@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}
+Generar recetas - Zero Food Waste
+{% endblock %}
+
+{% block content %}
+<h2>Generar recetas</h2>
+
+<p>
+  En esta sección se preparará la generación de recetas personalizadas a partir
+  de los alimentos registrados en la despensa.
+</p>
+
+<p>
+  La integración con inteligencia artificial se incorporará en una fase posterior.
+</p>
+
+<h3>Alimentos disponibles</h3>
+
+{% if alimentos %}
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Cantidad</th>
+      <th>Unidad</th>
+      <th>Fecha de caducidad</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for alimento in alimentos %}
+    <tr>
+      <td>{{ alimento.nombre }}</td>
+      <td>{{ alimento.cantidad }}</td>
+      <td>{{ alimento.unidad_medida }}</td>
+      <td>{{ alimento.fecha_caducidad }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No tienes alimentos registrados todavía.</p>
+{% endif %}
+
+<p class="actions">
+  <a class="button-link" href="{% url 'despensa:listado_alimentos' %}">Volver al listado</a>
+</p>
+{% endblock %}

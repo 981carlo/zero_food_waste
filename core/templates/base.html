@@ -20,6 +20,7 @@
           <span>Usuario: <strong>{{ user.username }}</strong></span>
           <a href="{% url 'despensa:listado_alimentos' %}">Mis alimentos</a>
           <a href="{% url 'despensa:alimentos_proximos' %}">Próximos a caducar</a>
+          <a href="{% url 'despensa:generar_recetas' %}">Generar recetas</a>
           <a href="{% url 'usuarios:logout_web' %}">Cerrar sesión</a>
         {% else %}
           <a href="{% url 'usuarios:registro_web' %}">Crear cuenta</a>

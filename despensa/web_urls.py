@@ -11,4 +11,5 @@ urlpatterns = [
     path("alimentos/<str:alimento_id>/editar/", views.editar_alimento_web, name="editar_alimento"),
     path("alimentos/<str:alimento_id>/eliminar/", views.eliminar_alimento_web, name="eliminar_alimento"),
     path("alimentos/proximos/", views.alimentos_proximos_web, name="alimentos_proximos"),
+    path("recetas/generar/", views.generar_recetas_web, name="generar_recetas"),
 ]

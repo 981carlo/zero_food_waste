@@ -152,3 +152,16 @@ def alimentos_proximos_web(request):
             "limite": limite,
         }
     )
+    
+
+@login_required(login_url="usuarios:login_web")
+def generar_recetas_web(request):
+    alimentos = Alimento.objects.filter(
+        usuario=request.user
+    ).order_by("fecha_caducidad")
+
+    return render(
+        request,
+        "despensa/generar_recetas.html",
+        {"alimentos": alimentos}
+    )
