@@ -8,42 +8,85 @@ Generar recetas - Zero Food Waste
 <h2>Generar recetas</h2>
 
 <p>
-  En esta sección se preparará la generación de recetas personalizadas a partir
-  de los alimentos registrados en la despensa.
+  Genera una receta personalizada a partir de los alimentos registrados en tu despensa.
 </p>
-
-<p>
-  La integración con inteligencia artificial se incorporará en una fase posterior.
-</p>
-
-<h3>Alimentos disponibles</h3>
 
 {% if alimentos %}
-<table>
-  <thead>
-    <tr>
-      <th>Nombre</th>
-      <th>Cantidad</th>
-      <th>Unidad</th>
-      <th>Fecha de caducidad</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for alimento in alimentos %}
-    <tr>
-      <td>{{ alimento.nombre }}</td>
-      <td>{{ alimento.cantidad }}</td>
-      <td>{{ alimento.unidad_medida }}</td>
-      <td>{{ alimento.fecha_caducidad }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<form method="post" id="recipe-form">
+  {% csrf_token %}
+
+    <p>
+      Puedes seleccionar alimentos concretos para generar la receta.
+      Si no seleccionas ninguno, se tendrán en cuenta todos los alimentos disponibles.
+    </p>
+
+  <h3>Alimentos disponibles</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Usar</th>
+        <th>Nombre</th>
+        <th>Cantidad</th>
+        <th>Unidad</th>
+        <th>Fecha de caducidad</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for alimento in alimentos %}
+      <tr>
+        <td>
+          <input
+            type="checkbox"
+            name="alimentos_seleccionados"
+            value="{{ alimento.id }}"
+          >
+        </td>
+        <td>{{ alimento.nombre }}</td>
+        <td>{{ alimento.cantidad }}</td>
+        <td>{{ alimento.unidad_medida }}</td>
+        <td>{{ alimento.fecha_caducidad }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="actions">
+    <button type="submit" id="generate-button">Generar receta</button>
+  </p>
+</form>
+
+<p id="loading-message" class="loading-message hidden">
+  Generando receta, por favor espera...
+</p>
 {% else %}
 <p>No tienes alimentos registrados todavía.</p>
 {% endif %}
 
-<p class="actions">
-  <a class="button-link" href="{% url 'despensa:listado_alimentos' %}">Volver al listado</a>
+{% if receta_generada %}
+
+
+<div class="recipe">
+  <h3>Receta:</h3>
+  {{ receta_generada|linebreaks }}
+</div>
+{% endif %}
+
+
+<p>
+  <a href="{% url 'despensa:listado_alimentos' %}">Volver al listado</a>
 </p>
+
+<script>
+  const recipeForm = document.getElementById("recipe-form");
+  const generateButton = document.getElementById("generate-button");
+  const loadingMessage = document.getElementById("loading-message");
+
+  if (recipeForm) {
+    recipeForm.addEventListener("submit", function () {
+      generateButton.disabled = true;
+      generateButton.textContent = "Generando...";
+      loadingMessage.classList.remove("hidden");
+    });
+  }
+</script>
 {% endblock %}
