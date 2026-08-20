@@ -9,6 +9,7 @@ Listado de alimentos - Zero Food Waste
 
 <p class="actions">
   <a class="button-link" href="{% url 'despensa:alta_alimento' %}">Añadir alimento</a>
+  <a class="button-link" href="{% url 'despensa:alimentos_proximos' %}">Próximos a caducar</a>
 </p>
 
 {% if alimentos %}
@@ -43,7 +44,7 @@ Listado de alimentos - Zero Food Waste
 {% endif %}
 
 <p class="actions">
-  <a class="button-link" href="{% url 'despensa:alimentos_proximos' %}">Próximos a caducar</a>
+  <a class="button-link" href="{% url 'despensa:generar_recetas' %}">Generar recetas</a>
 </p>
 
 <p>

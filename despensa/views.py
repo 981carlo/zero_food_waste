@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from .models import Alimento
 from .serializers import AlimentoSerializer
 from .forms import AlimentoForm
+from .services import generar_receta_con_llm
 
 
 class AlimentoViewSet(viewsets.ModelViewSet):
@@ -160,8 +161,36 @@ def generar_recetas_web(request):
         usuario=request.user
     ).order_by("fecha_caducidad")
 
+    receta_generada = None
+    alimentos_seleccionados_ids = []
+
+    if request.method == "POST":
+        alimentos_seleccionados_ids = request.POST.getlist("alimentos_seleccionados")
+
+        if alimentos_seleccionados_ids:
+            alimentos_para_receta = alimentos.filter(
+                pk__in=alimentos_seleccionados_ids
+            )
+        else:
+            alimentos_para_receta = alimentos
+
+        try:
+            receta_generada = generar_receta_con_llm(
+                alimentos_para_receta,
+                usar_todos_los_alimentos=bool(alimentos_seleccionados_ids),
+            )
+        except Exception:
+            messages.error(
+                request,
+                "No se ha podido generar la receta en este momento. Inténtalo de nuevo en unos minutos."
+            )
+
     return render(
         request,
         "despensa/generar_recetas.html",
-        {"alimentos": alimentos}
+        {
+            "alimentos": alimentos,
+            "receta_generada": receta_generada,
+            "alimentos_seleccionados_ids": alimentos_seleccionados_ids,
+        }
     )

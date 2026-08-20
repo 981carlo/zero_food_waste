@@ -136,3 +136,24 @@ ul {
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
+
+.recipe {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #d9e2d2;
+  border-radius: 4px;
+  background-color: #f7faf5;
+}
+
+.loading-message {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid #d9e2d2;
+  border-radius: 4px;
+  background-color: #f7faf5;
+  font-weight: bold;
+}
+
+.hidden {
+  display: none;
+}
