@@ -4,6 +4,9 @@ from datetime import timedelta
 from django.utils import timezone
 from google import genai
 
+class ErrorGeneracionReceta(Exception):
+    pass
+
 
 def formatear_cantidad(cantidad):
     if cantidad == cantidad.to_integral():
@@ -64,13 +67,14 @@ Instrucciones:
 - No uses formato Markdown.
 - No uses almohadillas, asteriscos ni separadores con guiones.
 - Usa texto plano, claro y fácil de mostrar en una página web.
+- Utiliza el punto 3 solo cuando sea necesario. De no ser necesario, el punto 4 pasa a ser el 3 y el 5 pasa a ser el 4
 
 Estructura de la respuesta:
-1. Nombre de la receta
-2. Alimentos utilizados
-3. Ingredientes básicos adicionales, si hacen falta
-4. Duración
-5. Pasos de preparación
+1. Nombre de la receta:
+2. Alimentos utilizados:
+3. Ingredientes básicos adicionales:
+4. Duración:
+5. Pasos de preparación:
 """.strip()
 
 
@@ -79,8 +83,8 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False):
     model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
     if not api_key:
-        raise RuntimeError(
-            "No se ha configurado GEMINI_API_KEY en el archivo .env"
+        raise ErrorGeneracionReceta(
+            "No se ha podido generar la receta porque no está configurada la API del LLM."
         )
 
     prompt = construir_prompt_recetas(
@@ -88,11 +92,34 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False):
         usar_todos_los_alimentos=usar_todos_los_alimentos,
     )
 
-    client = genai.Client(api_key=api_key)
+    try:
+        client = genai.Client(api_key=api_key)
 
-    interaction = client.interactions.create(
-        model=model,
-        input=prompt,
-    )
+        interaction = client.interactions.create(
+            model=model,
+            input=prompt,
+        )
 
-    return interaction.output_text
+    except Exception as error:
+        error_texto = str(error).lower()
+
+        if (
+            "quota" in error_texto
+            or "too_many_requests" in error_texto
+        ):
+            raise ErrorGeneracionReceta(
+                "Se ha alcanzado el límite temporal de consultas al LLM. Inténtalo de nuevo más tarde."
+            )
+
+        raise ErrorGeneracionReceta(
+            "No se ha podido conectar con el servicio de generación de recetas. Inténtalo de nuevo más tarde."
+        )
+
+    receta = interaction.output_text
+
+    if not receta or not receta.strip():
+        raise ErrorGeneracionReceta(
+            "El LLM no ha devuelto ninguna receta. Inténtalo de nuevo."
+        )
+
+    return receta
