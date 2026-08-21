@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from .models import Alimento
 from .serializers import AlimentoSerializer
 from .forms import AlimentoForm
-from .services import generar_receta_con_llm
+from .services import generar_receta_con_llm, ErrorGeneracionReceta
 
 
 class AlimentoViewSet(viewsets.ModelViewSet):
@@ -165,25 +165,28 @@ def generar_recetas_web(request):
     alimentos_seleccionados_ids = []
 
     if request.method == "POST":
-        alimentos_seleccionados_ids = request.POST.getlist("alimentos_seleccionados")
-
-        if alimentos_seleccionados_ids:
-            alimentos_para_receta = alimentos.filter(
-                pk__in=alimentos_seleccionados_ids
-            )
-        else:
-            alimentos_para_receta = alimentos
-
-        try:
-            receta_generada = generar_receta_con_llm(
-                alimentos_para_receta,
-                usar_todos_los_alimentos=bool(alimentos_seleccionados_ids),
-            )
-        except Exception:
+        if not alimentos.exists():
             messages.error(
                 request,
-                "No se ha podido generar la receta en este momento. Inténtalo de nuevo en unos minutos."
+                "No puedes generar una receta porque todavía no tienes alimentos registrados."
             )
+        else:
+            alimentos_seleccionados_ids = request.POST.getlist("alimentos_seleccionados")
+
+            if alimentos_seleccionados_ids:
+                alimentos_para_receta = alimentos.filter(
+                    pk__in=alimentos_seleccionados_ids
+                )
+            else:
+                alimentos_para_receta = alimentos
+
+            try:
+                receta_generada = generar_receta_con_llm(
+                    alimentos_para_receta,
+                    usar_todos_los_alimentos=bool(alimentos_seleccionados_ids),
+                )
+            except ErrorGeneracionReceta as error:
+                messages.error(request, str(error))
 
     return render(
         request,
