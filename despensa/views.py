@@ -70,6 +70,13 @@ def alta_alimento_web(request):
             messages.success(request, "Alimento añadido correctamente.")
             
             return redirect("despensa:listado_alimentos")
+        
+        else:
+            messages.error(
+                request,
+                "No se ha podido crear el alimento. Revisa los datos introducidos."
+            )
+            
     else:
         form = AlimentoForm()
 
@@ -82,11 +89,17 @@ def alta_alimento_web(request):
 
 @login_required(login_url="usuarios:login_web")
 def editar_alimento_web(request, alimento_id):
-    alimento = get_object_or_404(
-        Alimento,
-        pk=alimento_id,
-        usuario=request.user
-    )
+    try:
+        alimento = Alimento.objects.get(
+            pk=alimento_id,
+            usuario=request.user
+        )
+    except Alimento.DoesNotExist:
+        messages.error(
+            request,
+            "El alimento solicitado no existe o no pertenece a tu despensa."
+        )
+        return redirect("despensa:listado_alimentos")
 
     if request.method == "POST":
         form = AlimentoForm(request.POST, instance=alimento)
@@ -97,6 +110,13 @@ def editar_alimento_web(request, alimento_id):
             messages.success(request, "Alimento actualizado correctamente.")
             
             return redirect("despensa:listado_alimentos")
+        
+        else:
+            messages.error(
+                request,
+                "No se ha podido actualizar el alimento. Revisa los datos introducidos."
+            )
+            
     else:
         form = AlimentoForm(instance=alimento)
 
@@ -113,11 +133,17 @@ def editar_alimento_web(request, alimento_id):
 
 @login_required(login_url="usuarios:login_web")
 def eliminar_alimento_web(request, alimento_id):
-    alimento = get_object_or_404(
-        Alimento,
-        pk=alimento_id,
-        usuario=request.user
-    )
+    try:
+        alimento = Alimento.objects.get(
+            pk=alimento_id,
+            usuario=request.user
+        )
+    except Alimento.DoesNotExist:
+        messages.error(
+            request,
+            "El alimento solicitado no existe o no pertenece a tu despensa."
+        )
+        return redirect("despensa:listado_alimentos")
 
     if request.method == "POST":
         alimento.delete()

@@ -26,3 +26,11 @@ class AlimentoForm(forms.ModelForm):
             "cantidad": "Cantidad",
             "unidad_medida": "Unidad de medida",
         }
+        widgets = {
+            "cantidad": forms.NumberInput(
+                attrs={
+                    "step": "1",
+                    "min": "0",
+                }
+            ),
+        }
