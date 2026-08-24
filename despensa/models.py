@@ -4,11 +4,11 @@ from django.db import models
 
 class Alimento(models.Model):
     class UnidadMedida(models.TextChoices):
-        UNIDADES = "unidades", "Unidades"
         GRAMOS = "gramos", "Gramos"
         KILOGRAMOS = "kilogramos", "Kilogramos"
         MILILITROS = "mililitros", "Mililitros"
         LITROS = "litros", "Litros"
+        UNIDADES = "unidades", "Unidades"
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

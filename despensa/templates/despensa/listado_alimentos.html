@@ -10,6 +10,7 @@ Listado de alimentos - Zero Food Waste
 <p class="actions">
   <a class="button-link" href="{% url 'despensa:alta_alimento' %}">Añadir alimento</a>
   <a class="button-link" href="{% url 'despensa:alimentos_proximos' %}">Próximos a caducar</a>
+  <a class="button-link" href="{% url 'despensa:generar_recetas' %}">Generar recetas</a>
 </p>
 
 {% if alimentos %}
@@ -30,11 +31,10 @@ Listado de alimentos - Zero Food Waste
       <td>{{ alimento.cantidad }}</td>
       <td>{{ alimento.unidad_medida }}</td>
       <td>{{ alimento.fecha_caducidad }}</td>
-        <td>
-          <a href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
-          |
-          <a href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
-        </td>
+      <td>
+        <a class="action-link" href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
+        <a class="action-link danger-link" href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
+      </td>
     </tr>
     {% endfor %}
   </tbody>
@@ -42,10 +42,6 @@ Listado de alimentos - Zero Food Waste
 {% else %}
 <p>No tienes alimentos registrados.</p>
 {% endif %}
-
-<p class="actions">
-  <a class="button-link" href="{% url 'despensa:generar_recetas' %}">Generar recetas</a>
-</p>
 
 <p>
   <a href="{% url 'inicio' %}">Volver al inicio</a>
