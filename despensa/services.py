@@ -40,11 +40,11 @@ def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False):
 
     if usar_todos_los_alimentos:
         instruccion_uso_alimentos = (
-            "- Debes utilizar todos los alimentos de la lista, porque han sido seleccionados por el usuario."
+            "Debes utilizar todos los alimentos de la lista, porque han sido seleccionados por el usuario."
         )
     else:
         instruccion_uso_alimentos = (
-            "- No es necesario utilizar todos los alimentos de la lista; selecciona solo los que encajen bien en una receta coherente."
+            "No es necesario utilizar todos los alimentos de la lista; selecciona solo los que encajen bien en una receta coherente."
         )
     return f"""
 Eres un asistente culinario para una aplicación web orientada a reducir el desperdicio alimentario doméstico.
@@ -67,7 +67,8 @@ Instrucciones:
 - No uses formato Markdown.
 - No uses almohadillas, asteriscos ni separadores con guiones.
 - Usa texto plano, claro y fácil de mostrar en una página web.
-- Utiliza el punto 3 solo cuando sea necesario. De no ser necesario, el punto 4 pasa a ser el 3 y el 5 pasa a ser el 4
+- Utiliza el punto 3 solo cuando sea necesario. De no ser necesario, el punto 4 pasa a ser el 3 y el punto 5 pasa a ser el 4
+- Si detectas algo en la lista de alimentos que no sea un alimento, no lo incluyas en la receta. De ser así, añade un nuevo punto en la respuesta indicando qué elemento ha sido descartado por no ser un alimento
 
 Estructura de la respuesta:
 1. Nombre de la receta:
@@ -123,3 +124,97 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False):
         )
 
     return receta
+
+
+def construir_prompt_feedback_receta(receta_generada, comentario_usuario):
+    return f"""
+Eres un asistente culinario para una aplicación web orientada a reducir el desperdicio alimentario doméstico.
+
+El usuario ya ha recibido esta receta:
+
+{receta_generada}
+
+Ahora el usuario quiere modificarla con esta indicación:
+
+{comentario_usuario}
+
+Tu tarea es generar una nueva versión de la receta teniendo en cuenta la indicación del usuario.
+
+Instrucciones:
+- Responde siempre en español.
+- Mantén una receta realista y sencilla.
+- Respeta la intención del usuario.
+- No uses formato Markdown.
+- No uses almohadillas, asteriscos ni separadores con guiones.
+- Usa texto plano, claro y fácil de mostrar en una página web.
+- Utiliza el punto 3 solo cuando sea necesario. De no ser necesario, el punto 4 pasa a ser el 3 y el punto 5 pasa a ser el 4
+
+Estructura de la respuesta:
+1. Nombre de la receta:
+2. Alimentos utilizados:
+3. Ingredientes básicos adicionales:
+4. Duración:
+5. Pasos de preparación:
+""".strip()
+
+
+def modificar_receta_con_llm(receta_generada, comentario_usuario):
+    api_key = os.getenv("GEMINI_API_KEY")
+    model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+
+    if not api_key:
+        raise ErrorGeneracionReceta(
+            "No se ha podido modificar la receta porque no está configurada la API del LLM."
+        )
+
+    if not receta_generada or not receta_generada.strip():
+        raise ErrorGeneracionReceta(
+            "No hay una receta previa para modificar."
+        )
+
+    if not comentario_usuario or not comentario_usuario.strip():
+        raise ErrorGeneracionReceta(
+            "Debes escribir una indicación para modificar la receta."
+        )
+
+    receta_generada = receta_generada.strip()
+    comentario_usuario = comentario_usuario.strip()
+
+    prompt = construir_prompt_feedback_receta(
+        receta_generada,
+        comentario_usuario,
+    )
+
+    try:
+        client = genai.Client(api_key=api_key)
+
+        interaction = client.interactions.create(
+            model=model,
+            input=prompt,
+        )
+
+    except Exception as error:
+        error_texto = str(error).lower()
+
+        if (
+            "quota" in error_texto
+            or "too_many_requests" in error_texto
+        ):
+            raise ErrorGeneracionReceta(
+                "Se ha alcanzado el límite temporal de consultas al LLM. Inténtalo de nuevo más tarde."
+            )
+
+        raise ErrorGeneracionReceta(
+            "No se ha podido conectar con el servicio de generación de recetas. Inténtalo de nuevo más tarde."
+        )
+
+    receta_modificada = interaction.output_text
+
+    if not receta_modificada or not receta_modificada.strip():
+        raise ErrorGeneracionReceta(
+            "El LLM no ha devuelto ninguna receta modificada. Inténtalo de nuevo."
+        )
+
+    return receta_modificada
+
+
