@@ -31,9 +31,8 @@ Alimentos próximos a caducar - Zero Food Waste
       <td>{{ alimento.unidad_medida }}</td>
       <td>{{ alimento.fecha_caducidad }}</td>
       <td>
-        <a href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
-        |
-        <a href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
+        <a class="action-link" href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
+        <a class="action-link danger-link" href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
       </td>
     </tr>
     {% endfor %}

@@ -19,10 +19,11 @@ Eliminar alimento - Zero Food Waste
 <form method="post">
   {% csrf_token %}
 
-  <button type="submit">Sí, eliminar</button>
+  <p class="actions">
+    <button class="danger-button" type="submit">Sí, eliminar</button>
+    <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">
+      Cancelar
+    </a>
+  </p>
 </form>
-
-<p>
-  <a href="{% url 'despensa:listado_alimentos' %}">Cancelar y volver al listado</a>
-</p>
 {% endblock %}

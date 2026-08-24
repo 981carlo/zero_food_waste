@@ -1,27 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}Inicio - Zero Food Waste{% endblock %}
+{% block title %}
+Inicio - Zero Food Waste
+{% endblock %}
 
 {% block content %}
-  <h2>Inicio</h2>
+<section class="home">
+  <h2>Organiza tu despensa y aprovecha mejor tus alimentos</h2>
 
   <p>
-    Aplicación web para registrar alimentos disponibles en el hogar,
-    controlar sus fechas de caducidad y generar recetas personalizadas
-    para reducir el desperdicio alimentario.
+    Zero Food Waste te ayuda a registrar los alimentos disponibles en casa,
+    controlar sus fechas de caducidad y generar recetas personalizadas para
+    reducir el desperdicio alimentario.
   </p>
 
-  <h3>Funcionalidades principales</h3>
+  {% if user.is_authenticated %}
+    <p class="actions">
+      <a class="button-link" href="{% url 'despensa:listado_alimentos' %}">Ver mi despensa</a>
+      <a class="button-link" href="{% url 'despensa:generar_recetas' %}">Generar receta</a>
+    </p>
+  {% else %}
+    <p class="actions">
+      <a class="button-link" href="{% url 'usuarios:registro_web' %}">Crear cuenta</a>
+      <a class="button-link" href="{% url 'usuarios:login_web' %}">Iniciar sesión</a>
+    </p>
+  {% endif %}
+</section>
 
-  <ul>
-    <li>Registro e inicio de sesión de usuarios.</li>
-    <li>Gestión de alimentos de la despensa.</li>
-    <li>Control de fechas de caducidad.</li>
-    <li>Consulta de alimentos próximos a caducar.</li>
-    <li>Generación de recetas mediante inteligencia artificial.</li>
-  </ul>
+<section class="features">
+  <article class="card">
+    <h3>Gestiona alimentos</h3>
+    <p>
+      Añade productos a tu despensa indicando cantidad, unidad de medida y fecha de caducidad.
+    </p>
+  </article>
 
-  <p>
-    Esta es la vista inicial de la aplicación.
-  </p>
+  <article class="card">
+    <h3>Prioriza caducidades</h3>
+    <p>
+      Consulta los alimentos próximos a caducar para consumirlos antes y evitar olvidos.
+    </p>
+  </article>
+
+  <article class="card">
+    <h3>Genera recetas</h3>
+    <p>
+      Obtén propuestas de recetas a partir de los alimentos registrados mediante inteligencia artificial.
+    </p>
+  </article>
+</section>
 {% endblock %}
