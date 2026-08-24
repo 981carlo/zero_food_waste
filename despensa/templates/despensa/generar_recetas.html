@@ -14,6 +14,7 @@ Generar recetas - Zero Food Waste
 {% if alimentos %}
 <form method="post" id="recipe-form" class="recipe-form">
   {% csrf_token %}
+  <input type="hidden" name="accion" value="generar_receta">
 
     <p>
       Puedes seleccionar alimentos concretos para generar la receta.
@@ -64,11 +65,42 @@ Generar recetas - Zero Food Waste
 
 {% if receta_generada %}
 
-
 <div class="recipe">
   <h3>Receta</h3>
-  {{ receta_generada|linebreaks }}
+  {{ receta_generada|linebreaksbr }}
 </div>
+
+<h3>Modificar receta</h3>
+
+<p>
+  Si no te gusta la receta puedes dar tus indicaciones para modificarla.
+</p>
+
+<form method="post" id="feedback-form">
+  {% csrf_token %}
+
+  <input type="hidden" name="accion" value="modificar_receta">
+
+  <textarea name="receta_generada" hidden>{{ receta_generada }}</textarea>
+
+  <p>
+    <label for="comentario_usuario">Indicación para modificar la receta:</label>
+    <textarea
+      id="comentario_usuario"
+      name="comentario_usuario"
+      rows="4"
+      placeholder="Por ejemplo: hazla más rápida, no uses leche, dame una versión vegetariana..."
+    >{{ comentario_usuario }}</textarea>
+  </p>
+
+  <p class="actions">
+    <button type="submit" id="modify-button">Modificar receta</button>
+  </p>
+</form>
+
+<p id="feedback-loading-message" class="loading-message hidden">
+  Modificando receta, por favor espera...
+</p>
 {% endif %}
 
 
@@ -86,6 +118,18 @@ Generar recetas - Zero Food Waste
       generateButton.disabled = true;
       generateButton.textContent = "Generando...";
       loadingMessage.classList.remove("hidden");
+    });
+  }
+
+  const feedbackForm = document.getElementById("feedback-form");
+  const modifyButton = document.getElementById("modify-button");
+  const feedbackLoadingMessage = document.getElementById("feedback-loading-message");
+
+  if (feedbackForm) {
+    feedbackForm.addEventListener("submit", function () {
+      modifyButton.disabled = true;
+      modifyButton.textContent = "Modificando...";
+      feedbackLoadingMessage.classList.remove("hidden");
     });
   }
 </script>
