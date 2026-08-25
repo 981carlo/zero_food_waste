@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
@@ -83,8 +84,13 @@ def registro_web(request):
         form = RegistroUsuarioForm(request.POST)
 
         if form.is_valid():
-            form.save()
+            usuario = form.save()
+            login(request, usuario)
+            messages.success(request, "Cuenta creada correctamente. Has iniciado sesión.")
             return redirect("inicio")
+        
+        messages.error(request, "No se ha podido crear la cuenta. Revisa los datos introducidos.")
+    
     else:
         form = RegistroUsuarioForm()
 
