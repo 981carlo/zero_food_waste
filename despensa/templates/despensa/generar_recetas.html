@@ -11,15 +11,14 @@ Generar recetas - Zero Food Waste
   Genera una receta personalizada a partir de los alimentos registrados en tu despensa.
 </p>
 
-{% if alimentos %}
+{% if alimentos and not receta_generada %}
 <form method="post" id="recipe-form" class="recipe-form">
   {% csrf_token %}
-  <input type="hidden" name="accion" value="generar_receta">
 
-    <p>
-      Puedes seleccionar alimentos concretos para generar la receta.
-      Si no seleccionas ninguno, se tendrán en cuenta todos los alimentos disponibles.
-    </p>
+  <p>
+    Puedes seleccionar alimentos concretos para generar la receta.
+    Si no seleccionas ninguno, se tendrán en cuenta todos los alimentos disponibles.
+  </p>
 
   <h3>Alimentos disponibles</h3>
   <table>
@@ -52,14 +51,19 @@ Generar recetas - Zero Food Waste
   </table>
 
   <p class="actions">
-    <button type="submit" id="generate-button">Generar receta</button>
+    <button type="submit" id="generate-button" name="accion" value="generar_receta">
+      Generar receta
+    </button>
+    <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">
+      Volver al listado
+    </a>
   </p>
 </form>
 
 <p id="loading-message" class="loading-message hidden">
   Generando receta, por favor espera...
 </p>
-{% else %}
+{% elif not alimentos %}
 <p>No tienes alimentos registrados todavía.</p>
 {% endif %}
 
@@ -79,8 +83,6 @@ Generar recetas - Zero Food Waste
 <form method="post" id="feedback-form">
   {% csrf_token %}
 
-  <input type="hidden" name="accion" value="modificar_receta">
-
   <textarea name="receta_generada" hidden>{{ receta_generada }}</textarea>
 
   <p>
@@ -94,7 +96,12 @@ Generar recetas - Zero Food Waste
   </p>
 
   <p class="actions">
-    <button type="submit" id="modify-button">Modificar receta</button>
+    <button type="submit" id="modify-button" name="accion" value="modificar_receta">
+      Modificar receta
+    </button>
+    <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">
+      Volver al listado
+    </a>
   </p>
 </form>
 
@@ -102,11 +109,6 @@ Generar recetas - Zero Food Waste
   Modificando receta, por favor espera...
 </p>
 {% endif %}
-
-
-<p>
-  <a href="{% url 'despensa:listado_alimentos' %}">Volver al listado</a>
-</p>
 
 <script>
   const recipeForm = document.getElementById("recipe-form");
