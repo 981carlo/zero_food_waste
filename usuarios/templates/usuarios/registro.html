@@ -11,11 +11,13 @@ Registro - Zero Food Waste
   {% csrf_token %}
 
   {{ form.as_p }}
-
-  <button type="submit">Registrarse</button>
+  <p>  
+    <button type="submit">Registrarse</button>
+    <a class="button-link secondary-button" href="{% url 'inicio' %}">
+      Volver al inicio
+    </a>
+  </p>
 </form>
 
-<p>
-  <a href="{% url 'inicio' %}">Volver al inicio</a>
-</p>
+
 {% endblock %}

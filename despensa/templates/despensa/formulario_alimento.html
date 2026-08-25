@@ -12,10 +12,11 @@
 
   {{ form.as_p }}
 
-  <button type="submit">{{ texto_boton|default:"Guardar alimento" }}</button>
+  <p>
+    <button type="submit">{{ texto_boton|default:"Guardar alimento" }}</button>
+    <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">
+      Volver al listado
+    </a>
+  </p>
 </form>
-
-<p>
-  <a href="{% url 'despensa:listado_alimentos' %}">Volver al listado</a>
-</p>
 {% endblock %}
