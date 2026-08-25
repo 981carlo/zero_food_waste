@@ -1,34 +1,57 @@
-# Zero Food Waste - Despliegue con Docker
+# Zero Food Waste
 
 ## 1. Descripción del proyecto
 
-El proyecto está preparado para ejecutarse en contenedores Docker usando **Django**, **Uvicorn**, **Nginx** y **MongoDB**.
+Zero Food Waste es una aplicación web orientada a reducir el desperdicio alimentario doméstico mediante la gestión de alimentos disponibles en el hogar y la generación de recetas personalizadas.
 
-## 2. Tecnologías utilizadas
+La aplicación permite al usuario registrar alimentos en una despensa personal, controlar sus fechas de caducidad, consultar los productos próximos a caducar y generar recetas mediante un modelo de lenguaje integrado a través de la API de Gemini.
+
+El proyecto está preparado para ejecutarse en contenedores Docker usando Django, Uvicorn, Nginx y MongoDB.
+
+## 2. Funcionalidades principales
+
+- Registro de usuarios.
+- Inicio y cierre de sesión.
+- Gestión de alimentos por usuario.
+- Creación, consulta, edición y eliminación de alimentos.
+- Asociación de cada alimento al usuario autenticado.
+- Consulta de alimentos próximos a caducar.
+- Generación de recetas mediante la API de Gemini.
+- Selección opcional de alimentos para generar recetas.
+- Modificación de recetas generadas mediante indicaciones del usuario.
+- Gestión de errores durante la llamada al LLM.
+- Gestión de errores en formularios y accesos no válidos.
+- Caducidad de sesión por inactividad.
+
+## 3. Tecnologías utilizadas
 
 - Python 3.14
 - Django 6
+- Django REST Framework
 - Django MongoDB Backend
 - MongoDB
+- Gemini API
 - Uvicorn
 - Nginx
 - Docker
 - Docker Compose
 
-## 3. Variables de entorno
+## 4. Variables de entorno
 
 Antes de ejecutar el proyecto, crear un archivo `.env` en la raíz del proyecto a partir de `.env.example`.
 
 Contenido recomendado para desarrollo con Docker Compose:
 
 ```env
-MONGO_URI=mongodb://mongo:27017
+SECRET_KEY=change-me
+DEBUG=True
+MONGO_URI=mongodb://mongo:27017/
 MONGO_DB_NAME=zero_food_waste
+GEMINI_API_KEY=change-me
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
-Dentro de Docker Compose, el nombre `mongo` hace referencia al servicio de MongoDB definido en `docker-compose.yml`.
-
-## 4. Construcción y ejecución con Docker Compose
+## 5. Construcción y ejecución con Docker Compose
 
 Para levantar el proyecto completo, ejecutar desde la raíz del proyecto:
 
@@ -44,23 +67,10 @@ El sistema queda formado por tres contenedores:
 - `web`: aplicación Django ejecutada mediante Uvicorn.
 - `nginx`: servidor Nginx que recibe las peticiones HTTP y las redirige a Django.
 
-## 5. Flujo de funcionamiento de la aplicación
-
-1. El usuario accede desde el navegador a `http://localhost:8080`.
-2. La petición llega al contenedor de Nginx.
-3. Nginx actúa como proxy inverso y reenvía la petición al servicio `web` en el puerto `8000`.
-4. El servicio `web` ejecuta Django mediante Uvicorn usando la aplicación ASGI definida en `config/asgi.py`.
-5. Django procesa la petición, aplica su configuración, rutas y lógica interna.
-6. Si la aplicación necesita acceder a datos, Django se comunica con MongoDB mediante la URI configurada en `MONGO_URI`.
-7. MongoDB devuelve los datos a Django.
-8. Django genera la respuesta.
-9. Uvicorn devuelve la respuesta a Nginx.
-10. Nginx devuelve la respuesta final al navegador.
-
-Flujo resumido:
+La aplicación queda disponible en:
 
 ```text
-Navegador → Nginx → Uvicorn/Django → MongoDB
+http://localhost
 ```
 
 ## 6. Migraciones
@@ -84,10 +94,18 @@ docker compose exec web python manage.py createsuperuser
 Después, el panel de administración estará disponible en:
 
 ```text
-http://localhost:8080/admin/
+http://localhost/admin/
 ```
 
-## 8. Parar los contenedores
+## 8. Comprobación del proyecto
+
+Para comprobar que la configuración de Django no presenta errores:
+
+```bash
+docker compose exec web python manage.py check
+```
+
+## 9. Parar los contenedores
 
 Para detener los contenedores sin borrar los datos persistentes:
 
@@ -101,7 +119,7 @@ Para detener los contenedores y borrar también los datos almacenados en MongoDB
 docker compose down -v
 ```
 
-## 9. Construcción solo con Dockerfile
+## 10. Construcción solo con Dockerfile
 
 También se puede construir la imagen principal del proyecto con:
 
@@ -120,7 +138,7 @@ docker run -d --name zero_food_waste_mongo_run --network zero_food_waste_net -p 
 ```
 
 ```bash
-docker run -d --name zero_food_waste_app_run --network zero_food_waste_net -p 8001:8000 -e MONGO_URI=mongodb://zero_food_waste_mongo_run:27017 -e MONGO_DB_NAME=zero_food_waste zero_food_waste
+docker run -d --name zero_food_waste_app_run --network zero_food_waste_net -p 8001:8000 -e MONGO_URI=mongodb://zero_food_waste_mongo_run:27017/ -e MONGO_DB_NAME=zero_food_waste zero_food_waste
 ```
 
 La aplicación quedaría disponible en:
@@ -135,54 +153,45 @@ Este modo comprueba que la imagen creada con el Dockerfile puede ejecutarse con 
 docker compose up --build
 ```
 
-## 10. GitHub Actions
+## 11. Rutas principales
 
-El proyecto incluye configuración de GitHub Actions para automatizar comprobaciones relacionadas con Docker.
-
-### Docker Build and Push to GHCR
-
-Archivo:
+### Aplicación web
 
 ```text
-.github/workflows/github-action-docker-build.yml
+/                              Página de inicio
+/usuarios/registro-web/        Registro de usuario
+/usuarios/login-web/           Inicio de sesión
+/usuarios/logout-web/          Cierre de sesión
+/despensa/alimentos/           Listado de alimentos
+/despensa/alimentos/nuevo/     Alta de alimento
+/despensa/alimentos/proximos/  Alimentos próximos a caducar
+/despensa/recetas/generar/     Generación de recetas
+/admin/                        Panel de administración de Django
 ```
 
-Este workflow se ejecuta cuando se sube un tag al repositorio. Su función es construir la imagen principal del proyecto usando el `Dockerfile` y publicarla en GitHub Container Registry.
-
-Para lanzar este workflow, se puede crear y subir un tag:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-La imagen publicada sigue este formato:
+### API
 
 ```text
-ghcr.io/981carlo/zero_food_waste:latest
-ghcr.io/981carlo/zero_food_waste:v1.0.0
+/api/alimentos/                 Endpoint de alimentos
+/api/alimentos/proximos/        Endpoint de alimentos próximos a caducar
 ```
 
-Este workflow valida que el `Dockerfile` construye correctamente la imagen del proyecto y, además, deja la imagen disponible en el registro de contenedores.
+## 12. Flujo de funcionamiento
 
-### Docker Compose Check
-
-Archivo:
+El flujo general de la aplicación con Docker Compose es el siguiente:
 
 ```text
-.github/workflows/github-action-docker-compose-check.yml
+Petición:
+Navegador → Nginx → Uvicorn/Django → MongoDB
+
+Respuesta:
+MongoDB → Uvicorn/Django → Nginx → Navegador
 ```
 
-Este workflow es manual y se puede ejecutar desde la pestaña **Actions** de GitHub. Su función es comprobar el despliegue completo del proyecto usando Docker Compose:
-
-```bash
-docker compose up --build -d
-```
-
-Con esta comprobación se validan los tres servicios principales del proyecto:
-
-* `mongo`: base de datos MongoDB.
-* `web`: aplicación Django ejecutada con Uvicorn.
-* `nginx`: servidor Nginx que actúa como proxy inverso.
-
-El workflow de Docker Compose solo se ejecuta cuando se lanza manualmente desde GitHub.
+1. El usuario accede desde el navegador a `http://localhost`.
+2. La petición llega al contenedor de Nginx.
+3. Nginx actúa como proxy inverso y reenvía la petición al servicio `web`.
+4. El servicio `web` ejecuta Django mediante Uvicorn.
+5. Django procesa la petición, aplica las rutas y ejecuta la lógica correspondiente.
+6. Si la aplicación necesita acceder a datos, Django se comunica con MongoDB.
+7. Django genera la respuesta y la devuelve al navegador a través de Uvicorn y Nginx.
