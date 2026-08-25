@@ -15,6 +15,8 @@ Generar recetas - Zero Food Waste
 <form method="post" id="recipe-form" class="recipe-form">
   {% csrf_token %}
 
+  <input type="hidden" name="accion" value="generar_receta">
+
   <p>
     Puedes seleccionar alimentos concretos para generar la receta.
     Si no seleccionas ninguno, se tendrán en cuenta todos los alimentos disponibles.
@@ -51,7 +53,7 @@ Generar recetas - Zero Food Waste
   </table>
 
   <p class="actions">
-    <button type="submit" id="generate-button" name="accion" value="generar_receta">
+    <button type="submit" id="generate-button">
       Generar receta
     </button>
     <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">
@@ -88,7 +90,13 @@ Generar recetas - Zero Food Waste
 <form method="post" id="feedback-form">
   {% csrf_token %}
 
+  <input type="hidden" name="accion" value="modificar_receta">
+
   <textarea name="receta_generada" hidden>{{ receta_generada }}</textarea>
+
+  {% for alimento_id in alimentos_usados_ids %}
+    <input type="hidden" name="alimentos_usados" value="{{ alimento_id }}">
+  {% endfor %}
 
   <p>
     <label for="comentario_usuario">Indicación para modificar la receta:</label>
@@ -101,7 +109,7 @@ Generar recetas - Zero Food Waste
   </p>
 
   <p class="actions">
-    <button type="submit" id="modify-button" name="accion" value="modificar_receta">
+    <button type="submit" id="modify-button">
       Modificar receta
     </button>
     <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from rest_framework import viewsets
@@ -189,6 +189,7 @@ def generar_recetas_web(request):
 
     receta_generada = None
     alimentos_seleccionados_ids = []
+    alimentos_usados_ids = []
     comentario_usuario = ""
 
     if request.method == "POST":
@@ -197,10 +198,13 @@ def generar_recetas_web(request):
         if accion == "modificar_receta":
             receta_generada = request.POST.get("receta_generada", "")
             comentario_usuario = request.POST.get("comentario_usuario", "")
+            alimentos_usados_ids = request.POST.getlist("alimentos_usados")
+            alimentos_usados = alimentos.filter(pk__in=alimentos_usados_ids)
 
             try:
                 receta_generada = modificar_receta_con_llm(
                     receta_generada,
+                    alimentos_usados,
                     comentario_usuario,
                 )
                 comentario_usuario = ""
@@ -222,6 +226,11 @@ def generar_recetas_web(request):
                     )
                 else:
                     alimentos_para_receta = alimentos
+                
+                alimentos_usados_ids = [
+                    str(alimento.id)
+                    for alimento in alimentos_para_receta
+                ]
 
                 try:
                     receta_generada = generar_receta_con_llm(
@@ -238,6 +247,7 @@ def generar_recetas_web(request):
             "alimentos": alimentos,
             "receta_generada": receta_generada,
             "alimentos_seleccionados_ids": alimentos_seleccionados_ids,
+            "alimentos_usados_ids": alimentos_usados_ids,
             "comentario_usuario": comentario_usuario,
         }
     )

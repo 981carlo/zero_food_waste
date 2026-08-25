@@ -126,13 +126,21 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False):
     return receta
 
 
-def construir_prompt_feedback_receta(receta_generada, comentario_usuario):
+def construir_prompt_feedback_receta(receta_generada, alimentos_usados, comentario_usuario):
+    alimentos_usados_texto = "\n".join(
+        f"- {alimento.nombre}: {formatear_cantidad(alimento.cantidad)} {alimento.unidad_medida}"
+        for alimento in alimentos_usados
+    )
     return f"""
 Eres un asistente culinario para una aplicación web orientada a reducir el desperdicio alimentario doméstico.
 
 El usuario ya ha recibido esta receta:
 
 {receta_generada}
+
+El usuario ha elegido estos alimentos como alimentos principales permitidos:
+
+{alimentos_usados_texto}
 
 Ahora el usuario quiere modificarla con esta indicación:
 
@@ -144,6 +152,10 @@ Instrucciones:
 - Responde siempre en español.
 - Mantén una receta realista y sencilla.
 - Respeta la intención del usuario.
+- Mantén como alimentos principales únicamente los alimentos indicados en la lista anterior.
+- No añadas alimentos principales nuevos que no estén en esa lista.
+- No utilices otros alimentos de la despensa si no aparecen en la lista anterior.
+- Solo puedes añadir ingredientes básicos habituales como agua, sal, aceite, especias o condimentos.
 - No uses formato Markdown.
 - No uses almohadillas, asteriscos ni separadores con guiones.
 - Usa texto plano, claro y fácil de mostrar en una página web.
@@ -158,7 +170,7 @@ Estructura de la respuesta:
 """.strip()
 
 
-def modificar_receta_con_llm(receta_generada, comentario_usuario):
+def modificar_receta_con_llm(receta_generada, alimentos_usados, comentario_usuario):
     api_key = os.getenv("GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
@@ -182,6 +194,7 @@ def modificar_receta_con_llm(receta_generada, comentario_usuario):
 
     prompt = construir_prompt_feedback_receta(
         receta_generada,
+        alimentos_usados,
         comentario_usuario,
     )
 
@@ -216,5 +229,3 @@ def modificar_receta_con_llm(receta_generada, comentario_usuario):
         )
 
     return receta_modificada
-
-
