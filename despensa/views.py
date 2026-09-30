@@ -192,6 +192,7 @@ def generar_recetas_web(request):
     alimentos_seleccionados_ids = []
     alimentos_usados_ids = []
     alimentos_utilizados = []
+    indicaciones_usuario = ""
     comentario_usuario = ""
 
     if request.method == "POST":
@@ -204,6 +205,7 @@ def generar_recetas_web(request):
                     "No puedes generar una receta porque todavía no tienes alimentos registrados."
                 )
             else:
+                indicaciones_usuario = request.POST.get("indicaciones_usuario", "").strip()
                 alimentos_seleccionados_ids = request.POST.getlist("alimentos_seleccionados")
 
                 if alimentos_seleccionados_ids:
@@ -217,6 +219,7 @@ def generar_recetas_web(request):
                     resultado_generacion = generar_receta_con_llm(
                         alimentos_para_receta,
                         usar_todos_los_alimentos=bool(alimentos_seleccionados_ids),
+                        indicaciones_usuario=indicaciones_usuario,
                     )
 
                     receta_generada = resultado_generacion["receta"]
@@ -310,6 +313,7 @@ def generar_recetas_web(request):
             "alimentos_seleccionados_ids": alimentos_seleccionados_ids,
             "alimentos_usados_ids": alimentos_usados_ids,
             "alimentos_utilizados": alimentos_utilizados,
+            "indicaciones_usuario": indicaciones_usuario,
             "comentario_usuario": comentario_usuario,
         }
     )
