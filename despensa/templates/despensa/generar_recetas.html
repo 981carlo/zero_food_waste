@@ -121,6 +121,38 @@ Generar recetas - Zero Food Waste
 <p id="feedback-loading-message" class="loading-message hidden">
   Modificando receta, por favor espera...
 </p>
+  {% if alimentos_utilizados %}
+  <div class="recipe">
+    <h3>Alimentos que se descontarán</h3>
+
+    <ul>
+      {% for alimento in alimentos_utilizados %}
+        <li>
+          {{ alimento.nombre }}:
+          {{ alimento.cantidad_utilizada }}
+          {{ alimento.unidad_medida }}
+        </li>
+      {% endfor %}
+    </ul>
+
+    <form
+      method="post"
+      onsubmit="return confirm('¿Quieres finalizar esta receta? Se descontarán de tu despensa las cantidades indicadas y volverás al listado de alimentos.')"
+    >
+      {% csrf_token %}
+
+      <input type="hidden" name="accion" value="finalizar_receta">
+
+      <textarea name="receta_generada" hidden>{{ receta_generada }}</textarea>
+
+      <button type="submit">
+        Finalizar receta
+      </button>
+    </form>
+
+  </div>
+  {% endif %}
+
 {% endif %}
 
 <script>
