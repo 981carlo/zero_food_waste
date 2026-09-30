@@ -98,11 +98,18 @@ def registro_web(request):
 
 
 def login_web(request):
+    if request.method == "GET" and request.GET.get("next"):
+        messages.info(
+            request,
+            "Tu sesión ha finalizado o necesitas iniciar sesión para acceder a esta página."
+        )
+
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
 
         if form.is_valid():
             login(request, form.get_user())
+            messages.success(request, "Has iniciado sesión correctamente.")
             return redirect("inicio")
     else:
         form = AuthenticationForm()
@@ -112,6 +119,7 @@ def login_web(request):
 def logout_web(request):
     if request.method == "POST":
         logout(request)
+        messages.success(request, "Has cerrado sesión correctamente.")
         return redirect("inicio")
 
     return render(request, "usuarios/logout.html")

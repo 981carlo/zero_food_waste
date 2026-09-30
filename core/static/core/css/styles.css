@@ -225,6 +225,12 @@ ul {
   color: #8a1f1f;
 }
 
+.message.info {
+  border: 1px solid #b8cfe3;
+  background-color: #eef5fb;
+  color: #24547a;
+}
+
 .actions {
   display: flex;
   gap: 12px;
