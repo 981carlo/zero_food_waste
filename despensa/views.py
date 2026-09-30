@@ -14,6 +14,7 @@ from .models import Alimento
 from .serializers import AlimentoSerializer
 from .forms import AlimentoForm
 from .services import generar_receta_con_llm, modificar_receta_con_llm, ErrorGeneracionReceta
+from .recipes import finalizar_receta
 
 
 class AlimentoViewSet(viewsets.ModelViewSet):
@@ -190,28 +191,13 @@ def generar_recetas_web(request):
     receta_generada = None
     alimentos_seleccionados_ids = []
     alimentos_usados_ids = []
+    alimentos_utilizados = []
     comentario_usuario = ""
 
     if request.method == "POST":
         accion = request.POST.get("accion")
 
-        if accion == "modificar_receta":
-            receta_generada = request.POST.get("receta_generada", "")
-            comentario_usuario = request.POST.get("comentario_usuario", "")
-            alimentos_usados_ids = request.POST.getlist("alimentos_usados")
-            alimentos_usados = alimentos.filter(pk__in=alimentos_usados_ids)
-
-            try:
-                receta_generada = modificar_receta_con_llm(
-                    receta_generada,
-                    alimentos_usados,
-                    comentario_usuario,
-                )
-                comentario_usuario = ""
-            except ErrorGeneracionReceta as error:
-                messages.error(request, str(error))
-
-        else:
+        if accion == "generar_receta":
             if not alimentos.exists():
                 messages.error(
                     request,
@@ -226,19 +212,94 @@ def generar_recetas_web(request):
                     )
                 else:
                     alimentos_para_receta = alimentos
-                
-                alimentos_usados_ids = [
-                    str(alimento.id)
-                    for alimento in alimentos_para_receta
-                ]
 
                 try:
-                    receta_generada = generar_receta_con_llm(
+                    resultado_generacion = generar_receta_con_llm(
                         alimentos_para_receta,
                         usar_todos_los_alimentos=bool(alimentos_seleccionados_ids),
                     )
+
+                    receta_generada = resultado_generacion["receta"]
+                    alimentos_utilizados = resultado_generacion["alimentos_utilizados"]
+
+                    alimentos_usados_ids = [
+                        alimento["id"]
+                        for alimento in alimentos_utilizados
+                    ]
+
+                    request.session["alimentos_utilizados_receta"] = alimentos_utilizados
+
                 except ErrorGeneracionReceta as error:
                     messages.error(request, str(error))
+
+        elif accion == "modificar_receta":
+            receta_generada = request.POST.get("receta_generada", "")
+            comentario_usuario = request.POST.get("comentario_usuario", "")
+            alimentos_usados_ids = request.POST.getlist("alimentos_usados")
+            alimentos_usados = alimentos.filter(pk__in=alimentos_usados_ids)
+
+            try:
+                resultado_modificacion = modificar_receta_con_llm(
+                    receta_generada,
+                    alimentos_usados,
+                    comentario_usuario,
+                )
+
+                receta_generada = resultado_modificacion["receta"]
+                alimentos_utilizados = resultado_modificacion["alimentos_utilizados"]
+
+                alimentos_usados_ids = [
+                    alimento["id"]
+                    for alimento in alimentos_utilizados
+                ]
+
+                request.session["alimentos_utilizados_receta"] = alimentos_utilizados
+
+                comentario_usuario = ""
+
+            except ErrorGeneracionReceta as error:
+                messages.error(request, str(error))
+
+        elif accion == "finalizar_receta":
+            receta_generada = request.POST.get("receta_generada", "")
+            alimentos_utilizados = request.session.get(
+                "alimentos_utilizados_receta",
+                []
+            )
+
+            alimentos_usados_ids = [
+                alimento["id"]
+                for alimento in alimentos_utilizados
+            ]
+
+            if not alimentos_utilizados:
+                messages.error(
+                    request,
+                    "No hay una receta pendiente para actualizar la despensa."
+                )
+            else:
+                exito, mensaje = finalizar_receta(
+                    request.user,
+                    alimentos_utilizados,
+                )
+
+                if exito:
+                    request.session.pop(
+                        "alimentos_utilizados_receta",
+                        None
+                    )
+
+                    messages.success(
+                        request,
+                        mensaje
+                    )
+
+                    return redirect("despensa:listado_alimentos")
+
+                messages.error(
+                    request,
+                    mensaje
+                )
 
     return render(
         request,
@@ -248,6 +309,7 @@ def generar_recetas_web(request):
             "receta_generada": receta_generada,
             "alimentos_seleccionados_ids": alimentos_seleccionados_ids,
             "alimentos_usados_ids": alimentos_usados_ids,
+            "alimentos_utilizados": alimentos_utilizados,
             "comentario_usuario": comentario_usuario,
         }
     )

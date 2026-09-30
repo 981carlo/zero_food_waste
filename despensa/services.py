@@ -1,18 +1,90 @@
 import os
+import json
 from datetime import timedelta
 
 from django.utils import timezone
-from google import genai
 
-class ErrorGeneracionReceta(Exception):
-    pass
-
+from .llm import consultar_llm, ErrorGeneracionReceta
 
 def formatear_cantidad(cantidad):
     if cantidad == cantidad.to_integral():
         return str(int(cantidad))
 
     return str(cantidad).replace(".", ",")
+
+def construir_esquema_respuesta(alimentos):
+    codigos_alimentos = [
+        f"A{indice}"
+        for indice, _ in enumerate(alimentos, start=1)
+    ]
+
+    return {
+        "type": "object",
+        "properties": {
+            "receta": {
+                "type": "string",
+            },
+            "alimentos_utilizados": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "codigo": {
+                            "type": "string",
+                            "enum": codigos_alimentos,
+                        },
+                        "cantidad_utilizada": {
+                            "type": "number",
+                        },
+                    },
+                    "required": [
+                        "codigo",
+                        "cantidad_utilizada",
+                    ],
+                },
+            },
+        },
+        "required": [
+            "receta",
+            "alimentos_utilizados",
+        ],
+    }
+
+def procesar_respuesta_llm(respuesta, alimentos):
+    try:
+        datos_respuesta = json.loads(respuesta)
+    except (json.JSONDecodeError, TypeError):
+        raise ErrorGeneracionReceta(
+            "El LLM ha devuelto una respuesta con un formato no válido. Inténtalo de nuevo."
+        )
+
+    receta = datos_respuesta.get("receta", "").strip()
+    alimentos_utilizados = datos_respuesta.get("alimentos_utilizados", [])
+
+    mapa_alimentos = {
+        f"A{indice}": alimento
+        for indice, alimento in enumerate(alimentos, start=1)
+    }
+
+    alimentos_procesados = []
+
+    for alimento_utilizado in alimentos_utilizados:
+        codigo = alimento_utilizado.get("codigo")
+        cantidad_utilizada = alimento_utilizado.get("cantidad_utilizada")
+
+        alimento = mapa_alimentos.get(codigo)
+
+        if alimento is None:
+            continue
+
+        alimentos_procesados.append({
+            "id": str(alimento.id),
+            "nombre": alimento.nombre,
+            "cantidad_utilizada": cantidad_utilizada,
+            "unidad_medida": alimento.unidad_medida,
+        })
+
+    return receta, alimentos_procesados
 
 
 def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False):
@@ -21,8 +93,9 @@ def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False):
 
     lineas_alimentos = []
 
-    for alimento in alimentos:
+    for indice, alimento in enumerate(alimentos, start=1):
         fecha_caducidad = alimento.fecha_caducidad
+        codigo = f"A{indice}"
 
         if hoy <= fecha_caducidad <= limite_proximos:
             prioridad = "prioritario por caducidad próxima"
@@ -30,7 +103,7 @@ def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False):
             prioridad = "no prioritario"
 
         lineas_alimentos.append(
-            f"- {alimento.nombre}: "
+            f"- {codigo} | {alimento.nombre}: "
             f"{formatear_cantidad(alimento.cantidad)} {alimento.unidad_medida}, "
             f"caduca el {fecha_caducidad.isoformat()} "
             f"({prioridad})"
@@ -67,15 +140,18 @@ Instrucciones:
 - No uses formato Markdown.
 - No uses almohadillas, asteriscos ni separadores con guiones.
 - Usa texto plano, claro y fácil de mostrar en una página web.
-- Utiliza el punto 3 solo cuando sea necesario. De no ser necesario, el punto 4 pasa a ser el 3 y el punto 5 pasa a ser el 4
+- Si no se utilizan ingredientes básicos adicionales, no incluyas ese apartado en la receta.
 - Si detectas algo en la lista de alimentos que no sea un alimento, no lo incluyas en la receta. De ser así, añade un nuevo punto en la respuesta indicando qué elemento ha sido descartado por no ser un alimento
+- Para cada alimento de la lista que utilices realmente en la receta, incluye su código en alimentos_utilizados.
+- La cantidad_utilizada debe expresarse en la misma unidad de medida en la que aparece ese alimento en la lista y nunca puede superar la cantidad disponible.
+- No incluyas en alimentos_utilizados ingredientes básicos adicionales como sal, agua, aceite o especias, salvo que formen parte de la despensa identificada con un código.
 
 Estructura de la respuesta:
-1. Nombre de la receta:
-2. Alimentos utilizados:
-3. Ingredientes básicos adicionales:
-4. Duración:
-5. Pasos de preparación:
+Nombre de la receta:
+Alimentos utilizados:
+Ingredientes básicos adicionales:
+Duración:
+Pasos de preparación:
 """.strip()
 
 
@@ -93,43 +169,40 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False):
         usar_todos_los_alimentos=usar_todos_los_alimentos,
     )
 
-    try:
-        client = genai.Client(api_key=api_key)
+    esquema_respuesta = construir_esquema_respuesta(alimentos)
 
-        interaction = client.interactions.create(
-            model=model,
-            input=prompt,
-        )
+    respuesta = consultar_llm(
+        api_key,
+        model,
+        prompt,
+        esquema_respuesta,
+    )
 
-    except Exception as error:
-        error_texto = str(error).lower()
-
-        if (
-            "quota" in error_texto
-            or "too_many_requests" in error_texto
-        ):
-            raise ErrorGeneracionReceta(
-                "Se ha alcanzado el límite temporal de consultas al LLM. Inténtalo de nuevo más tarde."
-            )
-
-        raise ErrorGeneracionReceta(
-            "No se ha podido conectar con el servicio de generación de recetas. Inténtalo de nuevo más tarde."
-        )
-
-    receta = interaction.output_text
-
-    if not receta or not receta.strip():
+    if not respuesta or not respuesta.strip():
         raise ErrorGeneracionReceta(
             "El LLM no ha devuelto ninguna receta. Inténtalo de nuevo."
         )
 
-    return receta
+    receta, alimentos_utilizados = procesar_respuesta_llm(
+        respuesta,
+        alimentos,
+    )
 
+    if not receta:
+        raise ErrorGeneracionReceta(
+            "El LLM no ha devuelto ninguna receta. Inténtalo de nuevo."
+        )
+
+    return {
+        "receta": receta,
+        "alimentos_utilizados": alimentos_utilizados,
+    }
 
 def construir_prompt_feedback_receta(receta_generada, alimentos_usados, comentario_usuario):
     alimentos_usados_texto = "\n".join(
-        f"- {alimento.nombre}: {formatear_cantidad(alimento.cantidad)} {alimento.unidad_medida}"
-        for alimento in alimentos_usados
+        f"- A{indice} | {alimento.nombre}: "
+        f"{formatear_cantidad(alimento.cantidad)} {alimento.unidad_medida}"
+        for indice, alimento in enumerate(alimentos_usados, start=1)
     )
     return f"""
 Eres un asistente culinario para una aplicación web orientada a reducir el desperdicio alimentario doméstico.
@@ -138,7 +211,7 @@ El usuario ya ha recibido esta receta:
 
 {receta_generada}
 
-El usuario ha elegido estos alimentos como alimentos principales permitidos:
+Estos son los alimentos principales permitidos para la receta modificada:
 
 {alimentos_usados_texto}
 
@@ -159,25 +232,24 @@ Instrucciones:
 - No uses formato Markdown.
 - No uses almohadillas, asteriscos ni separadores con guiones.
 - Usa texto plano, claro y fácil de mostrar en una página web.
-- Utiliza el punto 3 solo cuando sea necesario. De no ser necesario, el punto 4 pasa a ser el 3 y el punto 5 pasa a ser el 4
+- Si no se utilizan ingredientes básicos adicionales, no incluyas ese apartado en la receta.
+- Para cada alimento de la lista que utilices realmente en la receta modificada, incluye su código en alimentos_utilizados.
+- La cantidad_utilizada debe expresarse en la misma unidad de medida en la que aparece ese alimento en la lista y nunca puede superar la cantidad disponible.
+- No incluyas en alimentos_utilizados ingredientes básicos adicionales como sal, agua, aceite o especias, salvo que formen parte de la despensa identificada con un código.
+- No muestres los códigos A1, A2, A3, etc. en el texto de la receta; utilízalos únicamente para identificar los alimentos en alimentos_utilizados.
 
 Estructura de la respuesta:
-1. Nombre de la receta:
-2. Alimentos utilizados:
-3. Ingredientes básicos adicionales:
-4. Duración:
-5. Pasos de preparación:
+Nombre de la receta:
+Alimentos utilizados:
+Ingredientes básicos adicionales:
+Duración:
+Pasos de preparación:
 """.strip()
 
 
 def modificar_receta_con_llm(receta_generada, alimentos_usados, comentario_usuario):
     api_key = os.getenv("GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
-
-    if not api_key:
-        raise ErrorGeneracionReceta(
-            "No se ha podido modificar la receta porque no está configurada la API del LLM."
-        )
 
     if not receta_generada or not receta_generada.strip():
         raise ErrorGeneracionReceta(
@@ -192,40 +264,42 @@ def modificar_receta_con_llm(receta_generada, alimentos_usados, comentario_usuar
     receta_generada = receta_generada.strip()
     comentario_usuario = comentario_usuario.strip()
 
+    if not api_key:
+        raise ErrorGeneracionReceta(
+            "No se ha podido modificar la receta porque no está configurada la API del LLM."
+        )
+
     prompt = construir_prompt_feedback_receta(
         receta_generada,
         alimentos_usados,
         comentario_usuario,
     )
 
-    try:
-        client = genai.Client(api_key=api_key)
+    esquema_respuesta = construir_esquema_respuesta(alimentos_usados)
 
-        interaction = client.interactions.create(
-            model=model,
-            input=prompt,
-        )
+    respuesta = consultar_llm(
+        api_key,
+        model,
+        prompt,
+        esquema_respuesta,
+    )
 
-    except Exception as error:
-        error_texto = str(error).lower()
-
-        if (
-            "quota" in error_texto
-            or "too_many_requests" in error_texto
-        ):
-            raise ErrorGeneracionReceta(
-                "Se ha alcanzado el límite temporal de consultas al LLM. Inténtalo de nuevo más tarde."
-            )
-
-        raise ErrorGeneracionReceta(
-            "No se ha podido conectar con el servicio de generación de recetas. Inténtalo de nuevo más tarde."
-        )
-
-    receta_modificada = interaction.output_text
-
-    if not receta_modificada or not receta_modificada.strip():
+    if not respuesta or not respuesta.strip():
         raise ErrorGeneracionReceta(
             "El LLM no ha devuelto ninguna receta modificada. Inténtalo de nuevo."
         )
 
-    return receta_modificada
+    receta_modificada, alimentos_utilizados = procesar_respuesta_llm(
+        respuesta,
+        alimentos_usados,
+    )
+
+    if not receta_modificada:
+        raise ErrorGeneracionReceta(
+            "El LLM no ha devuelto ninguna receta modificada. Inténtalo de nuevo."
+        )
+
+    return {
+        "receta": receta_modificada,
+        "alimentos_utilizados": alimentos_utilizados,
+    }
