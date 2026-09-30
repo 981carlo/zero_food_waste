@@ -18,7 +18,7 @@
           <a href="{% url 'inicio' %}">Inicio</a>
 
           {% if user.is_authenticated %}
-            <a href="{% url 'despensa:listado_alimentos' %}">Mis alimentos</a>
+            <a href="{% url 'despensa:listado_alimentos' %}">Mi despensa</a>
             <a href="{% url 'despensa:alimentos_proximos' %}">Próximos a caducar</a>
             <a href="{% url 'despensa:generar_recetas' %}">Generar recetas</a>
             <a href="{% url 'usuarios:logout_web' %}">Cerrar sesión</a>
