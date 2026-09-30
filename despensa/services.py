@@ -87,7 +87,7 @@ def procesar_respuesta_llm(respuesta, alimentos):
     return receta, alimentos_procesados
 
 
-def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False):
+def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False, indicaciones_usuario="" ):
     hoy = timezone.localdate()
     limite_proximos = hoy + timedelta(days=7)
 
@@ -119,6 +119,17 @@ def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False):
         instruccion_uso_alimentos = (
             "No es necesario utilizar todos los alimentos de la lista; selecciona solo los que encajen bien en una receta coherente."
         )
+
+    indicaciones_usuario = indicaciones_usuario.strip()
+
+    if indicaciones_usuario:
+        indicaciones = (
+            "\nIndicaciones adicionales del usuario:\n"
+            f"{indicaciones_usuario}"
+        )
+    else:
+        indicaciones = ""
+
     return f"""
 Eres un asistente culinario para una aplicación web orientada a reducir el desperdicio alimentario doméstico.
 
@@ -128,11 +139,13 @@ Fecha actual: {hoy.isoformat()}
 
 Alimentos disponibles:
 {lista_alimentos}
+{indicaciones}
 
 Instrucciones:
 - Responde siempre en español.
 - Prioriza los alimentos marcados como prioritarios por caducidad próxima.
 - {instruccion_uso_alimentos}
+- Respeta las indicaciones adicionales del usuario cuando se hayan proporcionado.
 - Propón una receta realista y sencilla.
 - No inventes ingredientes principales que no estén en la lista.
 - Puedes asumir ingredientes básicos de cocina como sal, aceite, agua o especias.
@@ -155,7 +168,7 @@ Pasos de preparación:
 """.strip()
 
 
-def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False):
+def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False, indicaciones_usuario=""):
     api_key = os.getenv("GEMINI_API_KEY")
     model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
@@ -167,6 +180,7 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False):
     prompt = construir_prompt_recetas(
         alimentos,
         usar_todos_los_alimentos=usar_todos_los_alimentos,
+        indicaciones_usuario=indicaciones_usuario,
     )
 
     esquema_respuesta = construir_esquema_respuesta(alimentos)
