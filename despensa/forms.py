@@ -37,8 +37,8 @@ class AlimentoForm(forms.ModelForm):
         model = Alimento
         fields = [
             "nombre",
-            "cantidad",
             "unidad_medida",
+            "cantidad",
             "fecha_caducidad",
         ]
         labels = {
