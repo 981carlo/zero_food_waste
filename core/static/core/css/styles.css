@@ -148,6 +148,17 @@ form p {
   margin-bottom: 16px;
 }
 
+.errorlist {
+  list-style: none;
+  padding: 10px 12px;
+  margin: 8px 0 12px 0;
+  border: 1px solid #e5a3a3;
+  border-radius: 4px;
+  background-color: #fdecec;
+  color: #8a1f1f;
+  font-weight: bold;
+}
+
 label {
   display: block;
   margin-bottom: 6px;
