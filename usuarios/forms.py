@@ -20,9 +20,9 @@ class RegistroUsuarioForm(UserCreationForm):
         }
 
     def clean_email(self):
-        email = self.cleaned_data["email"]
+        email = self.cleaned_data["email"].strip().lower()
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError(
                 "Ya existe una cuenta con este correo electrónico."
             )
