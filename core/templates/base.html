@@ -7,7 +7,7 @@
     <title>{% block title %}Zero Food Waste{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'core/css/styles.css' %}">
   </head>
-  <body>
+  <body class="{% block body_class %}background-general{% endblock %}">
     <header class="header">
       <div class="header-content">
         <h1 class="title">

@@ -12,6 +12,32 @@ body {
   flex-direction: column;
 }
 
+.background-general,
+.background-despensa,
+.background-caducidades,
+.background-recetas {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.background-general {
+  background-image: url("../img/background-general.png");
+}
+
+.background-despensa {
+  background-image: url("../img/background-despensa.png");
+}
+
+.background-caducidades {
+  background-image: url("../img/background-caducidades.png");
+}
+
+.background-recetas {
+  background-image: url("../img/background-recetas.png");
+}
+
 .header {
   background-color: #ffffff;
   border-bottom: 1px solid #d9e2d2;
@@ -99,12 +125,13 @@ tr:hover {
 
 .action-link {
   margin-right: 10px;
-  color: #1f5fa8;
+  color: #3f6f35;
   font-weight: bold;
   text-decoration: none;
 }
 
 .action-link:hover {
+  color: #31592a;
   text-decoration: underline;
 }
 
@@ -308,9 +335,11 @@ ul {
   margin-left: auto;
   margin-right: auto;
   padding: 20px 24px 32px 24px;
-  color: #5f6f5f;
+  color: white;
   font-size: 14px;
+  font-weight: bold;
   text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 @media (max-width: 800px) {
