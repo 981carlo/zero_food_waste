@@ -21,11 +21,13 @@ class AlimentoViewSet(viewsets.ModelViewSet):
     serializer_class = AlimentoSerializer
     permission_classes = [IsAuthenticated]
 
+     # Filtra los alimentos para que cada usuario solo acceda a los suyos.
     def get_queryset(self):
         return Alimento.objects.filter(
             usuario=self.request.user
         ).order_by("fecha_caducidad")
 
+    # Asocia automáticamente cada nuevo alimento al usuario autenticado.
     def perform_create(self, serializer):
         serializer.save(
             usuario=self.request.user
@@ -36,6 +38,7 @@ class AlimentoViewSet(viewsets.ModelViewSet):
         hoy = timezone.localdate()
         limite = hoy + timedelta(days=7)
 
+        # Devuelve únicamente los alimentos que caducan entre hoy y los próximos siete días.
         alimentos = self.get_queryset().filter(
             fecha_caducidad__gte=hoy,
             fecha_caducidad__lte=limite
@@ -208,6 +211,8 @@ def generar_recetas_web(request):
                 indicaciones_usuario = request.POST.get("indicaciones_usuario", "").strip()
                 alimentos_seleccionados_ids = request.POST.getlist("alimentos_seleccionados")
 
+                # Si el usuario selecciona alimentos, la receta se genera solo con ellos;
+                # en caso contrario se utiliza toda la despensa.
                 if alimentos_seleccionados_ids:
                     alimentos_para_receta = alimentos.filter(
                         pk__in=alimentos_seleccionados_ids
@@ -230,6 +235,8 @@ def generar_recetas_web(request):
                         for alimento in alimentos_utilizados
                     ]
 
+                    # Guarda en la sesión los alimentos realmente utilizados
+                    # para poder modificar o finalizar la receta posteriormente.
                     request.session["alimentos_utilizados_receta"] = alimentos_utilizados
 
                 except ErrorGeneracionReceta as error:
@@ -256,6 +263,7 @@ def generar_recetas_web(request):
                     for alimento in alimentos_utilizados
                 ]
 
+                # Actualiza la sesión con los alimentos utilizados en la receta modificada.
                 request.session["alimentos_utilizados_receta"] = alimentos_utilizados
 
                 comentario_usuario = ""
@@ -265,6 +273,7 @@ def generar_recetas_web(request):
 
         elif accion == "finalizar_receta":
             receta_generada = request.POST.get("receta_generada", "")
+            # Recupera de la sesión los alimentos utilizados en la receta actual.
             alimentos_utilizados = request.session.get(
                 "alimentos_utilizados_receta",
                 []
@@ -287,6 +296,8 @@ def generar_recetas_web(request):
                 )
 
                 if exito:
+                    # Elimina de la sesión los datos de la receta
+                    # una vez actualizada correctamente la despensa.
                     request.session.pop(
                         "alimentos_utilizados_receta",
                         None

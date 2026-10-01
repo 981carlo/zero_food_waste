@@ -12,7 +12,8 @@ class AlimentoForm(forms.ModelForm):
         ),
         input_formats=["%Y-%m-%d"],
     )
-    
+
+    # Añade una opción vacía para obligar al usuario a seleccionar una unidad.
     unidad_medida = forms.ChoiceField(
         choices=[("", "Selecciona una unidad")] + list(Alimento.UnidadMedida.choices),
         label="Unidad de medida",
@@ -31,6 +32,7 @@ class AlimentoForm(forms.ModelForm):
     def clean_nombre(self):
         nombre = self.cleaned_data["nombre"].strip()
 
+        # Normaliza el nombre eliminando espacios y poniendo en mayúscula la primera letra.
         return nombre[:1].upper() + nombre[1:]
     
     class Meta:

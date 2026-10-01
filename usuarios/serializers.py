@@ -35,6 +35,7 @@ class RegistroUsuarioSerializer(serializers.ModelSerializer):
         }
 
     def validate_email(self, email):
+        # Normaliza el correo antes de comprobar si ya está registrado.
         email = email.strip().lower()
 
         if Usuario.objects.filter(email__iexact=email).exists():
@@ -62,6 +63,7 @@ class RegistroUsuarioSerializer(serializers.ModelSerializer):
             email=datos.get("email"),
         )
 
+        # Aplica las reglas de seguridad de contraseña configuradas por Django.
         try:
             validate_password(password1, user=usuario)
         except DjangoValidationError as error:
@@ -77,6 +79,7 @@ class RegistroUsuarioSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password1")
         validated_data.pop("password2")
 
+        # Crea el usuario usando el método de Django que gestiona la contraseña.
         return Usuario.objects.create_user(
             password=password,
             **validated_data,
@@ -106,7 +109,7 @@ class InicioSesionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Credenciales incorrectas."
             )
-
+        # Añade el usuario autenticado a los datos validados para que la vista pueda iniciar la sesión.
         datos["usuario"] = usuario
 
         return datos

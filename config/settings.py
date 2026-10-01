@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
+# Configura MongoDB como base de datos utilizando las variables definidas en el entorno.
 DATABASES = {
     'default': {
         'ENGINE': 'django_mongodb_backend',
@@ -124,6 +124,7 @@ LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'Europe/Madrid'
 
+# Mantiene la sesión durante una hora de inactividad y renueva su duración con cada petición.
 SESSION_COOKIE_AGE = 3600
 SESSION_SAVE_EVERY_REQUEST = True
 

@@ -9,6 +9,7 @@ def consultar_llm(api_key, model, prompt, esquema_respuesta):
     try:
         client = genai.Client(api_key=api_key)
 
+        # Solicita al modelo una respuesta JSON ajustada al esquema definido por la aplicación.
         interaction = client.interactions.create(
             model=model,
             input=prompt,
@@ -20,6 +21,7 @@ def consultar_llm(api_key, model, prompt, esquema_respuesta):
         )
 
     except Exception as error:
+        # Convierte los errores del proveedor en mensajes controlados para la aplicación.
         error_texto = str(error).lower()
 
         if (
