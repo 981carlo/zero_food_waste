@@ -69,7 +69,7 @@ Generar recetas - Zero Food Waste
       Generar receta
     </button>
     <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">
-      Volver al listado
+      Volver a mi despensa
     </a>
   </p>
 </form>
@@ -125,13 +125,13 @@ Generar recetas - Zero Food Waste
       Modificar receta
     </button>
     <a class="button-link secondary-button" href="{% url 'despensa:listado_alimentos' %}">
-      Volver al listado
+      Volver a mi despensa
     </a>
   </p>
 </form>
 
 <p id="feedback-loading-message" class="loading-message hidden">
-  Modificando receta, por favor espera...
+  Modificando receta. Este proceso puede tardar más de 30 segundos, por favor espera...
 </p>
   {% if alimentos_utilizados %}
   <div class="recipe">

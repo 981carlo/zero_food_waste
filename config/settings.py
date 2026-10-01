@@ -31,12 +31,6 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "web", "nginx", "34.175.134.86", "www.zerofoodwaste.dev"]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-]
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -85,6 +79,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
 # Configura MongoDB como base de datos utilizando las variables definidas en el entorno.
 DATABASES = {
     'default': {

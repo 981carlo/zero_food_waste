@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}
-Iniciar sesion - Zero Food Waste
+Iniciar sesión - Zero Food Waste
 {% endblock %}
 
 {% block content %}
-<h2>Iniciar sesion</h2>
+<h2>Iniciar sesión</h2>
 
 <form method="post">
   {% csrf_token %}
 
   {{ form.as_p }}
   <p>
-    <button type="submit">Iniciar sesion</button>
+    <button type="submit">Iniciar sesión</button>
     <a class="button-link secondary-button" href="{% url 'inicio' %}">
       Volver al inicio
     </a>

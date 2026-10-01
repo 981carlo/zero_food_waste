@@ -3,7 +3,7 @@
 {% block body_class %}background-despensa{% endblock %}
 
 {% block title %}
-Listado de alimentos - Zero Food Waste
+Mi despensa - Zero Food Waste
 {% endblock %}
 
 {% block content %}
@@ -32,7 +32,13 @@ Listado de alimentos - Zero Food Waste
       <td>{{ alimento.nombre }}</td>
       <td>{{ alimento.cantidad }}</td>
       <td>{{ alimento.unidad_medida }}</td>
-      <td>{{ alimento.fecha_caducidad }}</td>
+      <td>
+        {{ alimento.fecha_caducidad }}
+
+        {% if alimento.fecha_caducidad < hoy %}
+          <span class="expired-label">Caducado</span>
+        {% endif %}
+      </td>
       <td>
         <a class="action-link" href="{% url 'despensa:editar_alimento' alimento.id %}">Editar</a>
         <a class="action-link danger-link" href="{% url 'despensa:eliminar_alimento' alimento.id %}">Eliminar</a>
