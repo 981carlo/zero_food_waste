@@ -50,6 +50,8 @@ class AlimentoViewSet(viewsets.ModelViewSet):
 
 @login_required(login_url="usuarios:login_web")
 def listado_alimentos_web(request):
+    hoy = timezone.localdate()
+
     alimentos = Alimento.objects.filter(
         usuario=request.user
     ).order_by("fecha_caducidad")
@@ -57,7 +59,10 @@ def listado_alimentos_web(request):
     return render(
         request,
         "despensa/listado_alimentos.html",
-        {"alimentos": alimentos}
+        {
+            "alimentos": alimentos,
+            "hoy": hoy,
+        }
     )
 
 
@@ -186,9 +191,14 @@ def alimentos_proximos_web(request):
     
 
 @login_required(login_url="usuarios:login_web")
+@login_required(login_url="usuarios:login_web")
 def generar_recetas_web(request):
+    hoy = timezone.localdate()
+
+    # Excluye los alimentos caducados de la generación de recetas.
     alimentos = Alimento.objects.filter(
-        usuario=request.user
+        usuario=request.user,
+        fecha_caducidad__gte=hoy,
     ).order_by("fecha_caducidad")
 
     receta_generada = None
@@ -205,7 +215,7 @@ def generar_recetas_web(request):
             if not alimentos.exists():
                 messages.error(
                     request,
-                    "No puedes generar una receta porque todavía no tienes alimentos registrados."
+                    "No tienes alimentos disponibles para generar una receta."
                 )
             else:
                 indicaciones_usuario = request.POST.get("indicaciones_usuario", "").strip()

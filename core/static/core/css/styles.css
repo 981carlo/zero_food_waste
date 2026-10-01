@@ -139,6 +139,12 @@ tr:hover {
   color: #8a1f1f;
 }
 
+.expired-label {
+  margin-left: 8px;
+  color: #8a1f1f;
+  font-weight: bold;
+}
+
 form {
   max-width: 520px;
   margin-top: 20px;
