@@ -231,7 +231,11 @@ button:disabled {
 }
 
 .actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-top: 20px;
+  margin-bottom: 16px;
 }
 
 .actions .button-link,
@@ -273,13 +277,6 @@ ul {
   border: 1px solid #b8cfe3;
   background-color: #eef5fb;
   color: #24547a;
-}
-
-.actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
 }
 
 .recipe {
