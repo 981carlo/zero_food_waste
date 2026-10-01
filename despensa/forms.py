@@ -21,11 +21,11 @@ class AlimentoForm(forms.ModelForm):
     )
     
     nombre = forms.CharField(
-        max_length=50,
+        max_length=100,
         label="Nombre",
         error_messages={
             "required": "Este campo es requerido.",
-            "max_length": "El nombre no puede tener más de 50 caracteres.",
+            "max_length": "El nombre no puede tener más de 100 caracteres.",
         },
     )
     
