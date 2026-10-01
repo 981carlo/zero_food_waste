@@ -1,4 +1,5 @@
 from django.test import TestCase
+from decimal import Decimal
 
 from datetime import date
 
@@ -8,6 +9,8 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from .models import Alimento
+from .recipes import finalizar_receta
+
 
 # Comprueba que un usuario no puede acceder a un alimento perteneciente a otro usuario.
 class AlimentoAislamientoTests(TestCase):
@@ -43,3 +46,42 @@ class AlimentoAislamientoTests(TestCase):
         respuesta = self.client.get(url)
 
         self.assertEqual(respuesta.status_code, 404)
+
+
+# Comprueba que al finalizar una receta se descuenta correctamente la cantidad utilizada.
+class RecetaFinalizacionTests(TestCase):
+    def setUp(self):
+        self.usuario = get_user_model().objects.create_user(
+            username="usuario_receta",
+            password="Password123!"
+        )
+
+        self.alimento = Alimento.objects.create(
+            usuario=self.usuario,
+            nombre="Arroz",
+            cantidad="1.00",
+            unidad_medida="kilogramos",
+            fecha_caducidad=date(2026, 10, 15),
+        )
+
+    # Comprueba que al finalizar una receta se descuenta la cantidad utilizada.
+    def test_finalizar_receta_descuenta_cantidad_utilizada(self):
+        alimentos_utilizados = [
+            {
+                "id": str(self.alimento.pk),
+                "cantidad_utilizada": "0.25",
+            }
+        ]
+
+        resultado, _ = finalizar_receta(
+            self.usuario,
+            alimentos_utilizados
+        )
+
+        self.alimento.refresh_from_db()
+
+        self.assertTrue(resultado)
+        self.assertEqual(
+            self.alimento.cantidad,
+            Decimal("0.75")
+        )
