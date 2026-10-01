@@ -1,4 +1,3 @@
-from django.test import TestCase
 from decimal import Decimal
 
 from datetime import date
@@ -12,7 +11,6 @@ from .models import Alimento
 from .recipes import finalizar_receta
 
 
-# Comprueba que un usuario no puede acceder a un alimento perteneciente a otro usuario.
 class AlimentoAislamientoTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -34,7 +32,7 @@ class AlimentoAislamientoTests(TestCase):
             unidad_medida="litros",
             fecha_caducidad=date(2026, 10, 10),
         )
-
+    # Comprueba que un usuario no puede acceder a un alimento perteneciente a otro usuario.
     def test_usuario_no_puede_acceder_a_alimento_ajeno(self):
         self.client.force_authenticate(user=self.usuario_ajeno)
 
@@ -48,7 +46,6 @@ class AlimentoAislamientoTests(TestCase):
         self.assertEqual(respuesta.status_code, 404)
 
 
-# Comprueba que al finalizar una receta se descuenta correctamente la cantidad utilizada.
 class RecetaFinalizacionTests(TestCase):
     def setUp(self):
         self.usuario = get_user_model().objects.create_user(
@@ -85,3 +82,23 @@ class RecetaFinalizacionTests(TestCase):
             self.alimento.cantidad,
             Decimal("0.75")
         )
+
+    # Comprueba que el alimento se elimina cuando se utiliza toda la cantidad disponible.
+    def test_finalizar_receta_elimina_alimento_si_cantidad_llega_a_cero(self):
+        alimentos_utilizados = [
+            {
+                "id": str(self.alimento.pk),
+                "cantidad_utilizada": "1.00",
+            }
+        ]
+
+        resultado, _ = finalizar_receta(
+            self.usuario,
+            alimentos_utilizados
+        )
+
+        self.assertTrue(resultado)
+        self.assertFalse(
+            Alimento.objects.filter(pk=self.alimento.pk).exists()
+        )
+
