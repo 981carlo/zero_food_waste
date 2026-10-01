@@ -1,5 +1,4 @@
 from decimal import Decimal
-
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -102,3 +101,41 @@ class RecetaFinalizacionTests(TestCase):
             Alimento.objects.filter(pk=self.alimento.pk).exists()
         )
 
+    # Comprueba que no se actualiza ningún alimento si una cantidad es insuficiente.
+    def test_finalizar_receta_no_realiza_actualizaciones_parciales(self):
+        segundo_alimento = Alimento.objects.create(
+            usuario=self.usuario,
+            nombre="Leche",
+            cantidad="0.50",
+            unidad_medida="litros",
+            fecha_caducidad=date(2026, 10, 12),
+        )
+
+        alimentos_utilizados = [
+            {
+                "id": str(self.alimento.pk),
+                "cantidad_utilizada": "0.25",
+            },
+            {
+                "id": str(segundo_alimento.pk),
+                "cantidad_utilizada": "1.00",
+            },
+        ]
+
+        resultado, _ = finalizar_receta(
+            self.usuario,
+            alimentos_utilizados
+        )
+
+        self.alimento.refresh_from_db()
+        segundo_alimento.refresh_from_db()
+
+        self.assertFalse(resultado)
+        self.assertEqual(
+            self.alimento.cantidad,
+            Decimal("1.00")
+        )
+        self.assertEqual(
+            segundo_alimento.cantidad,
+            Decimal("0.50")
+        )
