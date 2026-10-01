@@ -279,6 +279,17 @@ def generar_recetas_web(request):
                 comentario_usuario = ""
 
             except ErrorGeneracionReceta as error:
+                # Recupera los datos de la receta anterior para mantener disponible su finalización.
+                alimentos_utilizados = request.session.get(
+                    "alimentos_utilizados_receta",
+                    []
+                )
+
+                alimentos_usados_ids = []
+
+                for alimento in alimentos_utilizados:
+                    alimentos_usados_ids.append(alimento["id"])
+
                 messages.error(request, str(error))
 
         elif accion == "finalizar_receta":
