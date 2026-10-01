@@ -40,11 +40,12 @@ def finalizar_receta(usuario, alimentos_utilizados):
                 False,
                 f"No hay suficiente cantidad de {alimento.nombre} en la despensa."
             )
-
+        # Almacena temporalmente las operaciones validadas antes de modificar la despensa.
         operaciones.append(
             (alimento, cantidad_utilizada)
         )
 
+    # Aplica los cambios solo después de validar correctamente todas las cantidades.
     for alimento, cantidad_utilizada in operaciones:
         nueva_cantidad = alimento.cantidad - cantidad_utilizada
 

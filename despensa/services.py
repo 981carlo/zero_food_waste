@@ -13,6 +13,10 @@ def formatear_cantidad(cantidad):
     return str(cantidad).replace(".", ",")
 
 def construir_esquema_respuesta(alimentos):
+    """
+    Construye el esquema JSON que debe devolver el LLM,
+    incluyendo los códigos válidos de los alimentos disponibles.
+    """
     codigos_alimentos = [
         f"A{indice}"
         for indice, _ in enumerate(alimentos, start=1)
@@ -51,6 +55,10 @@ def construir_esquema_respuesta(alimentos):
     }
 
 def procesar_respuesta_llm(respuesta, alimentos):
+    """
+    Procesa la respuesta JSON del LLM y relaciona los códigos
+    de los alimentos utilizados con los registros de la despensa.
+    """
     try:
         datos_respuesta = json.loads(respuesta)
     except (json.JSONDecodeError, TypeError):
@@ -61,6 +69,7 @@ def procesar_respuesta_llm(respuesta, alimentos):
     receta = datos_respuesta.get("receta", "").strip()
     alimentos_utilizados = datos_respuesta.get("alimentos_utilizados", [])
 
+    # Relaciona los códigos enviados al LLM con los alimentos originales.
     mapa_alimentos = {
         f"A{indice}": alimento
         for indice, alimento in enumerate(alimentos, start=1)
@@ -88,11 +97,13 @@ def procesar_respuesta_llm(respuesta, alimentos):
 
 
 def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False, indicaciones_usuario="" ):
+    """Construye el prompt para generar una receta a partir de los alimentos disponibles."""
     hoy = timezone.localdate()
     limite_proximos = hoy + timedelta(days=7)
 
     lineas_alimentos = []
 
+    # Asigna un código a cada alimento e indica si debe priorizarse por caducidad.
     for indice, alimento in enumerate(alimentos, start=1):
         fecha_caducidad = alimento.fecha_caducidad
         codigo = f"A{indice}"
@@ -111,6 +122,7 @@ def construir_prompt_recetas(alimentos, usar_todos_los_alimentos=False, indicaci
 
     lista_alimentos = "\n".join(lineas_alimentos)
 
+    # Adapta el prompt según se use toda la despensa o una selección del usuario.
     if usar_todos_los_alimentos:
         instruccion_uso_alimentos = (
             "Debes utilizar todos los alimentos de la lista, porque han sido seleccionados por el usuario."
@@ -183,6 +195,7 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False, indicacion
         indicaciones_usuario=indicaciones_usuario,
     )
 
+    # Define el formato estructurado que debe devolver el LLM.
     esquema_respuesta = construir_esquema_respuesta(alimentos)
 
     respuesta = consultar_llm(
@@ -213,6 +226,7 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False, indicacion
     }
 
 def construir_prompt_feedback_receta(receta_generada, alimentos_usados, comentario_usuario):
+    # Asigna códigos a los alimentos usados para identificarlos en la respuesta estructurada.
     alimentos_usados_texto = "\n".join(
         f"- A{indice} | {alimento.nombre}: "
         f"{formatear_cantidad(alimento.cantidad)} {alimento.unidad_medida}"
@@ -289,6 +303,7 @@ def modificar_receta_con_llm(receta_generada, alimentos_usados, comentario_usuar
         comentario_usuario,
     )
 
+    # Incluye en la respuesta estructurada únicamente los alimentos usados en la receta anterior.
     esquema_respuesta = construir_esquema_respuesta(alimentos_usados)
 
     respuesta = consultar_llm(

@@ -85,6 +85,7 @@ def registro_web(request):
 
         if form.is_valid():
             usuario = form.save()
+            # Inicia sesión automáticamente después de crear correctamente la cuenta.
             login(request, usuario)
             messages.success(request, "Cuenta creada correctamente. Has iniciado sesión.")
             return redirect("inicio")
@@ -98,6 +99,7 @@ def registro_web(request):
 
 
 def login_web(request):
+    # Muestra un aviso cuando el usuario llega al login desde una vista protegida.
     if request.method == "GET" and request.GET.get("next"):
         messages.info(
             request,

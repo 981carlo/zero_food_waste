@@ -4,6 +4,8 @@ from .models import Alimento
 
 
 class AlimentoSerializer(serializers.ModelSerializer):
+    # Representa el identificador ObjectId de MongoDB
+    # como texto y evita que pueda modificarse.
     id = serializers.CharField(read_only=True)
     unidad_medida = serializers.ChoiceField(
         choices=Alimento.UnidadMedida.choices

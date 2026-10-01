@@ -9,6 +9,8 @@ class Alimento(models.Model):
         MILILITROS = "mililitros", "Mililitros"
         LITROS = "litros", "Litros"
         UNIDADES = "unidades", "Unidades"
+
+    # Asocia cada alimento a la despensa del usuario que lo ha creado.
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
