@@ -18,7 +18,12 @@ El proyecto está preparado para ejecutarse en contenedores Docker usando Django
 - Consulta de alimentos próximos a caducar.
 - Generación de recetas mediante la API de Gemini.
 - Selección opcional de alimentos para generar recetas.
+- Indicaciones adicionales del usuario antes de generar una receta.
 - Modificación de recetas generadas mediante indicaciones del usuario.
+- Identificación de los alimentos y cantidades utilizados en cada receta.
+- Finalización de recetas con actualización automática de las cantidades de la despensa.
+- Eliminación automática de un alimento cuando su cantidad llega a cero al finalizar una receta.
+- Identificación de alimentos caducados en la despensa y exclusión de estos de la generación de recetas.
 - Gestión de errores durante la llamada al LLM.
 - Gestión de errores en formularios y accesos no válidos.
 - Caducidad de sesión por inactividad.
@@ -31,6 +36,7 @@ El proyecto está preparado para ejecutarse en contenedores Docker usando Django
 - Django MongoDB Backend
 - MongoDB
 - Gemini API
+- google-genai 2.24.0
 - Uvicorn
 - Nginx
 - Docker
@@ -105,6 +111,21 @@ Para comprobar que la configuración de Django no presenta errores:
 docker compose exec web python manage.py check
 ```
 
+### Pruebas automatizadas
+
+El proyecto incluye cuatro pruebas automatizadas sobre lógica crítica de la despensa. Para ejecutarlas:
+
+```bash
+docker compose exec web python manage.py test despensa
+```
+
+Las pruebas comprueban:
+
+- El aislamiento de alimentos entre usuarios.
+- El descuento de cantidades al finalizar una receta.
+- La eliminación de un alimento cuando su cantidad llega a cero.
+- La ausencia de actualizaciones parciales si alguna cantidad es insuficiente.
+
 ## 9. Parar los contenedores
 
 Para detener los contenedores sin borrar los datos persistentes:
@@ -137,8 +158,10 @@ docker network create zero_food_waste_net
 docker run -d --name zero_food_waste_mongo_run --network zero_food_waste_net -p 27017:27017 -v zero_food_waste_mongo_data:/data/db mongo:8.0
 ```
 
+Para que la integración con Gemini disponga también de las variables necesarias, el contenedor carga el archivo `.env`. La variable `MONGO_URI` se sobrescribe para apuntar al contenedor de MongoDB creado manualmente.
+
 ```bash
-docker run -d --name zero_food_waste_app_run --network zero_food_waste_net -p 8001:8000 -e MONGO_URI=mongodb://zero_food_waste_mongo_run:27017/ -e MONGO_DB_NAME=zero_food_waste zero_food_waste
+docker run -d --name zero_food_waste_app_run --network zero_food_waste_net -p 8001:80 --env-file .env -e MONGO_URI=mongodb://zero_food_waste_mongo_run:27017/ -e MONGO_DB_NAME=zero_food_waste zero_food_waste
 ```
 
 La aplicación quedaría disponible en:
@@ -158,22 +181,28 @@ docker compose up --build
 ### Aplicación web
 
 ```text
-/                              Página de inicio
-/usuarios/registro-web/        Registro de usuario
-/usuarios/login-web/           Inicio de sesión
-/usuarios/logout-web/          Cierre de sesión
-/despensa/alimentos/           Listado de alimentos
-/despensa/alimentos/nuevo/     Alta de alimento
-/despensa/alimentos/proximos/  Alimentos próximos a caducar
-/despensa/recetas/generar/     Generación de recetas
-/admin/                        Panel de administración de Django
+/                                          Página de inicio
+/usuarios/registro-web/                    Registro de usuario
+/usuarios/login-web/                       Inicio de sesión
+/usuarios/logout-web/                      Cierre de sesión
+/despensa/alimentos/                       Mi despensa
+/despensa/alimentos/nuevo/                 Alta de alimento
+/despensa/alimentos/<id>/editar/           Edición de alimento
+/despensa/alimentos/<id>/eliminar/         Eliminación de alimento
+/despensa/alimentos/proximos/              Alimentos próximos a caducar
+/despensa/recetas/generar/                 Generación, modificación y finalización de recetas
+/admin/                                    Panel de administración de Django
 ```
 
 ### API
 
 ```text
-/api/alimentos/                 Endpoint de alimentos
-/api/alimentos/proximos/        Endpoint de alimentos próximos a caducar
+/usuarios/registro/             Registro de usuario
+/usuarios/iniciar-sesion/       Inicio de sesión
+/usuarios/cerrar-sesion/        Cierre de sesión
+/api/alimentos/                 Listado y creación de alimentos
+/api/alimentos/<id>/            Consulta, edición y eliminación de un alimento
+/api/alimentos/proximos/        Alimentos próximos a caducar
 ```
 
 ## 12. Flujo de funcionamiento
@@ -195,3 +224,13 @@ MongoDB → Uvicorn/Django → Nginx → Navegador
 5. Django procesa la petición, aplica las rutas y ejecuta la lógica correspondiente.
 6. Si la aplicación necesita acceder a datos, Django se comunica con MongoDB.
 7. Django genera la respuesta y la devuelve al navegador a través de Uvicorn y Nginx.
+
+Cuando el usuario genera o modifica una receta, el flujo incorpora además una llamada al servicio del LLM:
+
+```text
+Django → API de Gemini → Django
+```
+
+La aplicación construye el prompt con los alimentos disponibles y las indicaciones del usuario. La respuesta del LLM se solicita en formato JSON estructurado para relacionar la receta con los alimentos y cantidades utilizados.
+
+Cuando el usuario finaliza una receta, la aplicación valida esas cantidades y actualiza la despensa. Si la cantidad restante de un alimento llega a cero, el registro se elimina.
