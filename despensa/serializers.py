@@ -63,8 +63,8 @@ class AlimentoSerializer(serializers.ModelSerializer):
             )
 
         return datos
-    
-    
+
+
 class GenerarRecetaSerializer(serializers.Serializer):
     alimentos_seleccionados = serializers.ListField(
         child=serializers.CharField(
@@ -102,3 +102,10 @@ class GenerarRecetaSerializer(serializers.Serializer):
             )
 
         return ids
+
+
+class ModificarRecetaSerializer(serializers.Serializer):
+    comentario_usuario = serializers.CharField(
+        allow_blank=False,
+        trim_whitespace=True,
+    )

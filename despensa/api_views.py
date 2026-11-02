@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Alimento
-from .serializers import AlimentoSerializer, GenerarRecetaSerializer
-from .services import generar_receta_con_llm, ErrorGeneracionReceta
+from .serializers import AlimentoSerializer, GenerarRecetaSerializer, ModificarRecetaSerializer
+from .services import generar_receta_con_llm, ErrorGeneracionReceta, modificar_receta_con_llm
 
 
 class AlimentoViewSet(viewsets.ModelViewSet):
@@ -82,6 +82,56 @@ class GenerarRecetaAPIView(APIView):
                 {"detail": str(error)},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+
+        request.session["receta_pendiente_api"] = resultado
+
+        return Response(
+            resultado,
+            status=status.HTTP_200_OK,
+        )
+
+
+class ModificarRecetaAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ModificarRecetaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        receta_pendiente = request.session.get("receta_pendiente_api")
+
+        if not receta_pendiente:
+            return Response(
+                {"detail": "No hay una receta pendiente para modificar."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        alimentos = Alimento.objects.filter(
+            usuario=request.user,
+            fecha_caducidad__gte=timezone.localdate(),
+        ).order_by("fecha_caducidad")
+
+        if not alimentos.exists():
+            return Response(
+                {"detail": "No tienes alimentos disponibles para modificar la receta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comentario = serializer.validated_data["comentario_usuario"]
+
+        try:
+            resultado = modificar_receta_con_llm(
+                receta_pendiente["receta"],
+                alimentos,
+                comentario,
+            )
+        except ErrorGeneracionReceta as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        request.session["receta_pendiente_api"] = resultado
 
         return Response(
             resultado,
