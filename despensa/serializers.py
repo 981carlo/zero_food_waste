@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework import serializers
 
 from .models import Alimento
@@ -61,3 +63,42 @@ class AlimentoSerializer(serializers.ModelSerializer):
             )
 
         return datos
+    
+    
+class GenerarRecetaSerializer(serializers.Serializer):
+    alimentos_seleccionados = serializers.ListField(
+        child=serializers.CharField(
+            allow_blank=False,
+            trim_whitespace=True,
+        ),
+        required=False,
+        default=list,
+    )
+    indicaciones_usuario = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default="",
+        trim_whitespace=True,
+    )
+    
+    def validate_alimentos_seleccionados(self, ids):
+        if not ids:
+            return ids
+
+        request = self.context["request"]
+
+        ids_disponibles = {
+            str(alimento_id)
+            for alimento_id in Alimento.objects.filter(
+                usuario=request.user,
+                fecha_caducidad__gte=timezone.localdate(),
+            ).values_list("pk", flat=True)
+        }
+
+        if any(alimento_id not in ids_disponibles for alimento_id in ids):
+            raise serializers.ValidationError(
+                "Alguno de los alimentos seleccionados no existe, "
+                "no pertenece a tu despensa o está caducado."
+            )
+
+        return ids
