@@ -255,13 +255,11 @@ def generar_recetas_web(request):
         elif accion == "modificar_receta":
             receta_generada = request.POST.get("receta_generada", "")
             comentario_usuario = request.POST.get("comentario_usuario", "")
-            alimentos_usados_ids = request.POST.getlist("alimentos_usados")
-            alimentos_usados = alimentos.filter(pk__in=alimentos_usados_ids)
 
             try:
                 resultado_modificacion = modificar_receta_con_llm(
                     receta_generada,
-                    alimentos_usados,
+                    alimentos,
                     comentario_usuario,
                 )
 

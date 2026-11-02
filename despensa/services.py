@@ -74,6 +74,9 @@ def procesar_respuesta_llm(respuesta, alimentos):
         f"A{indice}": alimento
         for indice, alimento in enumerate(alimentos, start=1)
     }
+    
+    for codigo in mapa_alimentos:
+        receta = receta.replace(f" ({codigo})", "")
 
     alimentos_procesados = []
 
@@ -170,19 +173,38 @@ Instrucciones:
 - Para cada alimento de la lista que utilices realmente en la receta, incluye su código en alimentos_utilizados.
 - La cantidad_utilizada debe expresarse en la misma unidad de medida en la que aparece ese alimento en la lista y nunca puede superar la cantidad disponible.
 - No incluyas en alimentos_utilizados ingredientes básicos adicionales como sal, agua, aceite o especias, salvo que formen parte de la despensa identificada con un código.
+- No muestres los códigos A1, A2, A3, etc. en el texto de la receta; utilízalos únicamente para identificar los alimentos en alimentos_utilizados.
+- Respeta estrictamente la estructura indicada y utiliza saltos de línea reales entre cada apartado.
+- En "Alimentos utilizados", muestra cada alimento en una línea independiente.
+- En "Ingredientes básicos adicionales", muestra cada ingrediente en una línea independiente.
+- En "Pasos de preparación", escribe cada paso numerado en una línea independiente.
+- Nunca escribas varios pasos de preparación en la misma línea.
 
-Estructura de la respuesta:
-Nombre de la receta:
+El texto de la receta debe seguir exactamente esta estructura:
+
+Nombre de la receta: [nombre]
+
 Alimentos utilizados:
+- [alimento]: [cantidad y unidad]
+- [alimento]: [cantidad y unidad]
+
 Ingredientes básicos adicionales:
-Duración:
+- [ingrediente]
+- [ingrediente]
+
+Duración: [duración]
+
 Pasos de preparación:
+1. [primer paso]
+2. [segundo paso]
+3. [tercer paso]
+
 """.strip()
 
 
 def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False, indicaciones_usuario=""):
     api_key = os.getenv("GEMINI_API_KEY")
-    model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+    model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
     if not api_key:
         raise ErrorGeneracionReceta(
@@ -225,12 +247,12 @@ def generar_receta_con_llm(alimentos, usar_todos_los_alimentos=False, indicacion
         "alimentos_utilizados": alimentos_utilizados,
     }
 
-def construir_prompt_feedback_receta(receta_generada, alimentos_usados, comentario_usuario):
+def construir_prompt_feedback_receta(receta_generada, alimentos_disponibles, comentario_usuario):
     # Asigna códigos a los alimentos usados para identificarlos en la respuesta estructurada.
     alimentos_usados_texto = "\n".join(
         f"- A{indice} | {alimento.nombre}: "
         f"{formatear_cantidad(alimento.cantidad)} {alimento.unidad_medida}"
-        for indice, alimento in enumerate(alimentos_usados, start=1)
+        for indice, alimento in enumerate(alimentos_disponibles, start=1)
     )
     return f"""
 Eres un asistente culinario para una aplicación web orientada a reducir el desperdicio alimentario doméstico.
@@ -253,9 +275,10 @@ Instrucciones:
 - Responde siempre en español.
 - Mantén una receta realista y sencilla.
 - Respeta la intención del usuario.
-- Mantén como alimentos principales únicamente los alimentos indicados en la lista anterior.
-- No añadas alimentos principales nuevos que no estén en esa lista.
-- No utilices otros alimentos de la despensa si no aparecen en la lista anterior.
+- Utiliza como alimentos principales únicamente alimentos presentes en la lista anterior.
+- Puedes incorporar alimentos de esa lista aunque no aparecieran en la receta original, si son necesarios para cumplir la nueva indicación del usuario.
+- No inventes ni añadas alimentos principales que no aparezcan en la lista anterior.
+- Si la indicación del usuario no puede cumplirse con los alimentos disponibles, no inventes ingredientes para intentar cumplirla.
 - Solo puedes añadir ingredientes básicos habituales como agua, sal, aceite, especias o condimentos.
 - No uses formato Markdown.
 - No uses almohadillas, asteriscos ni separadores con guiones.
@@ -265,19 +288,37 @@ Instrucciones:
 - La cantidad_utilizada debe expresarse en la misma unidad de medida en la que aparece ese alimento en la lista y nunca puede superar la cantidad disponible.
 - No incluyas en alimentos_utilizados ingredientes básicos adicionales como sal, agua, aceite o especias, salvo que formen parte de la despensa identificada con un código.
 - No muestres los códigos A1, A2, A3, etc. en el texto de la receta; utilízalos únicamente para identificar los alimentos en alimentos_utilizados.
+- Respeta estrictamente la estructura indicada y utiliza saltos de línea reales entre cada apartado.
+- En "Alimentos utilizados", muestra cada alimento en una línea independiente.
+- En "Ingredientes básicos adicionales", muestra cada ingrediente en una línea independiente.
+- En "Pasos de preparación", escribe cada paso numerado en una línea independiente.
+- Nunca escribas varios pasos de preparación en la misma línea.
 
-Estructura de la respuesta:
-Nombre de la receta:
+El texto de la receta debe seguir exactamente esta estructura:
+
+Nombre de la receta: [nombre]
+
 Alimentos utilizados:
+- [alimento]: [cantidad y unidad]
+- [alimento]: [cantidad y unidad]
+
 Ingredientes básicos adicionales:
-Duración:
+- [ingrediente]
+- [ingrediente]
+
+Duración: [duración]
+
 Pasos de preparación:
+1. [primer paso]
+2. [segundo paso]
+3. [tercer paso]
+
 """.strip()
 
 
-def modificar_receta_con_llm(receta_generada, alimentos_usados, comentario_usuario):
+def modificar_receta_con_llm(receta_generada, alimentos_disponibles, comentario_usuario):
     api_key = os.getenv("GEMINI_API_KEY")
-    model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+    model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
     if not receta_generada or not receta_generada.strip():
         raise ErrorGeneracionReceta(
@@ -299,12 +340,12 @@ def modificar_receta_con_llm(receta_generada, alimentos_usados, comentario_usuar
 
     prompt = construir_prompt_feedback_receta(
         receta_generada,
-        alimentos_usados,
+        alimentos_disponibles,
         comentario_usuario,
     )
 
     # Incluye en la respuesta estructurada únicamente los alimentos usados en la receta anterior.
-    esquema_respuesta = construir_esquema_respuesta(alimentos_usados)
+    esquema_respuesta = construir_esquema_respuesta(alimentos_disponibles)
 
     respuesta = consultar_llm(
         api_key,
@@ -320,7 +361,7 @@ def modificar_receta_con_llm(receta_generada, alimentos_usados, comentario_usuar
 
     receta_modificada, alimentos_utilizados = procesar_respuesta_llm(
         respuesta,
-        alimentos_usados,
+        alimentos_disponibles,
     )
 
     if not receta_modificada:
