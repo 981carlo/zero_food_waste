@@ -1,3 +1,6 @@
+import json
+from types import SimpleNamespace
+
 from decimal import Decimal
 from datetime import date
 
@@ -8,6 +11,7 @@ from rest_framework.test import APIClient
 
 from .models import Alimento
 from .recipes import finalizar_receta
+from .services import procesar_respuesta_llm, ErrorGeneracionReceta
 
 
 class AlimentoAislamientoTests(TestCase):
@@ -139,3 +143,51 @@ class RecetaFinalizacionTests(TestCase):
             segundo_alimento.cantidad,
             Decimal("0.50")
         )
+
+
+class CantidadesRespuestaLLMTests(TestCase):
+    # Comprueba que se rechaza una cantidad superior a la disponible.
+    def test_rechaza_cantidad_superior_a_la_disponible(self):
+        # Simula un alimento sin crear registros en la base de datos.
+        alimento = SimpleNamespace(
+            id="leche_prueba",
+            nombre="Leche",
+            cantidad=Decimal("1.00"),
+            unidad_medida="litros",
+        )
+
+        # Reproduce el error del modelo: 250 litros cuando solo hay uno.
+        respuesta = json.dumps({
+            "receta": "Una receta con leche",
+            "alimentos_utilizados": [
+                {"codigo": "A1", "cantidad_utilizada": 250},
+            ],
+        })
+
+        with self.assertRaisesMessage(
+            ErrorGeneracionReceta,
+            "superior a la disponible",
+        ):
+            procesar_respuesta_llm(respuesta, [alimento])
+
+    # Comprueba que se acepta una cantidad válida en la unidad del alimento.
+    def test_acepta_cantidad_decimal_en_la_unidad_del_alimento(self):
+        alimento = SimpleNamespace(
+            id="leche_prueba",
+            nombre="Leche",
+            cantidad=Decimal("1.00"),
+            unidad_medida="litros",
+        )
+
+        # Representa correctamente 250 mililitros como 0.25 litros.
+        respuesta = json.dumps({
+            "receta": "Una receta con leche",
+            "alimentos_utilizados": [
+                {"codigo": "A1", "cantidad_utilizada": 0.25},
+            ],
+        })
+
+        _, alimentos = procesar_respuesta_llm(respuesta, [alimento])
+
+        self.assertEqual(alimentos[0]["cantidad_utilizada"], 0.25)
+        self.assertEqual(alimentos[0]["unidad_medida"], "litros")

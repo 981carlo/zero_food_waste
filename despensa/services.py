@@ -1,5 +1,8 @@
 import os
 import json
+
+from decimal import Decimal, InvalidOperation
+
 from datetime import timedelta
 
 from django.utils import timezone
@@ -88,6 +91,27 @@ def procesar_respuesta_llm(respuesta, alimentos):
 
         if alimento is None:
             continue
+        
+        try:
+            if isinstance(cantidad_utilizada, bool):
+                raise ValueError
+
+            cantidad_decimal = Decimal(str(cantidad_utilizada))
+        except (InvalidOperation, ValueError, TypeError):
+            raise ErrorGeneracionReceta(
+                "El LLM ha devuelto una cantidad no válida. Inténtalo de nuevo."
+            )
+
+        if not cantidad_decimal.is_finite() or cantidad_decimal <= 0:
+            raise ErrorGeneracionReceta(
+                "El LLM ha devuelto una cantidad no válida. Inténtalo de nuevo."
+            )
+
+        if cantidad_decimal > alimento.cantidad:
+            raise ErrorGeneracionReceta(
+                f"El LLM ha indicado una cantidad de {alimento.nombre} "
+                "superior a la disponible. Inténtalo de nuevo."
+            )
 
         alimentos_procesados.append({
             "id": str(alimento.id),
@@ -172,6 +196,9 @@ Instrucciones:
 - Si detectas algo en la lista de alimentos que no sea un alimento, no lo incluyas en la receta. De ser así, añade un nuevo punto en la respuesta indicando qué elemento ha sido descartado por no ser un alimento
 - Para cada alimento de la lista que utilices realmente en la receta, incluye su código en alimentos_utilizados.
 - La cantidad_utilizada debe expresarse en la misma unidad de medida en la que aparece ese alimento en la lista y nunca puede superar la cantidad disponible.
+- Si muestras una unidad diferente en el texto de la receta, convierte cantidad_utilizada a la unidad de la despensa.
+- Por ejemplo: si la leche está registrada en litros y utilizas 250 ml, devuelve cantidad_utilizada: 0.25, nunca 250.
+- Si un alimento está registrado en kilogramos y utilizas 200 gramos, devuelve cantidad_utilizada: 0.2, nunca 200.
 - No incluyas en alimentos_utilizados ingredientes básicos adicionales como sal, agua, aceite o especias, salvo que formen parte de la despensa identificada con un código.
 - No muestres los códigos A1, A2, A3, etc. en el texto de la receta; utilízalos únicamente para identificar los alimentos en alimentos_utilizados.
 - Respeta estrictamente la estructura indicada y utiliza saltos de línea reales entre cada apartado.
@@ -286,6 +313,9 @@ Instrucciones:
 - Si no se utilizan ingredientes básicos adicionales, no incluyas ese apartado en la receta.
 - Para cada alimento de la lista que utilices realmente en la receta modificada, incluye su código en alimentos_utilizados.
 - La cantidad_utilizada debe expresarse en la misma unidad de medida en la que aparece ese alimento en la lista y nunca puede superar la cantidad disponible.
+- Si muestras una unidad diferente en el texto de la receta, convierte cantidad_utilizada a la unidad de la despensa.
+- Por ejemplo: si la leche está registrada en litros y utilizas 250 ml, devuelve cantidad_utilizada: 0.25, nunca 250.
+- Si un alimento está registrado en kilogramos y utilizas 200 gramos, devuelve cantidad_utilizada: 0.2, nunca 200.
 - No incluyas en alimentos_utilizados ingredientes básicos adicionales como sal, agua, aceite o especias, salvo que formen parte de la despensa identificada con un código.
 - No muestres los códigos A1, A2, A3, etc. en el texto de la receta; utilízalos únicamente para identificar los alimentos en alimentos_utilizados.
 - Respeta estrictamente la estructura indicada y utiliza saltos de línea reales entre cada apartado.
